@@ -105,7 +105,9 @@ type marble struct {
 }
 
 // Information of Patient
-type patient struct {
+
+
+type Patient struct {
 	ObjectType string `json:docType"`
 	PatientId string `json:"patientId"`
 	PatientSSN string `json:"patientssn"`
@@ -116,7 +118,7 @@ type patient struct {
 }
 
 // Information of Provider
-type provider struct {
+type Provider struct {
 	ObjectType string `json:docType"`
 	ProviderId string `json:"providerId"`
 	ProviderEHR string `json:"providerehr"`
@@ -125,6 +127,21 @@ type provider struct {
 	ProviderLastname string `json:"lastname"`    //the fieldtags are needed to keep case from bouncing around
 	Speciality string `json:"speciality"`
 }
+
+type Consent struct {
+	ObjectType string `json:docType"`
+	Provider
+	StartTime time.Time
+	EndTime   time.Time
+}
+
+type medication struct {
+	ObjectType string `json:docType"`
+	Patient
+	ProviderConsent[] Consent
+}
+
+
 
 
 // ===================================================================================
@@ -319,10 +336,24 @@ func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args
 
 	//==== Create marble object and marshal to JSON ====
 	objectType := "Patient"
-	patient := &patient{objectType, patientId, patientSSN, patientUrl, firstname, lastname, DOB}
-	//fmt.Println(patients.firstname)
+	patient := &Patient{objectType, patientId, patientSSN, patientUrl, firstname, lastname, DOB}
 
 	patientJSONasBytes, err := json.Marshal(patient)
+	var patientMed medication;
+	patientMed.ObjectType = "Medication";
+	patientMed.Patient = *patient;
+	var defaultConsent Consent
+	provider := &Provider{"Provider", "provider001", "mtbc", "mtbc", "faisal", "faisal", "faisal"}
+	defaultConsent.Provider = *provider
+	defaultConsent.StartTime = time.Now()
+	defaultConsent.EndTime = time.Now()
+	patientMed.ProviderConsent  = make([]Consent,10)
+	patientMed.ProviderConsent  = append(patientMed.ProviderConsent, defaultConsent)
+
+	medJSONasBytes, err := json.Marshal(&patientMed)
+
+	//fmt.Println(patients.firstname)
+
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -337,8 +368,11 @@ func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args
 
 
 	// === Save Patient to state ===
-	err = stub.PutPrivateData("patientDetails", patientId, patientJSONasBytes)
-	//err = stub.PutState(patientId, patientJSONasBytes)
+	err = stub.PutPrivateData("patientDetails", patientId, medJSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	err = stub.PutState(patientId, patientJSONasBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -415,7 +449,7 @@ func (t *SimpleChaincode) RegisterProvider(stub shim.ChaincodeStubInterface, arg
 
 	//==== Create Provider object and marshal to JSON ====
 	objectType := "Provider"
-	provider := &provider{objectType, providerId, providerEHR, providerEHRUrl, firstname, lastname, speciality}
+	provider := &Provider{objectType, providerId, providerEHR, providerEHRUrl, firstname, lastname, speciality}
 	//fmt.Println(Provider.firstname)
 
 	providerJSONasBytes, err := json.Marshal(provider)
