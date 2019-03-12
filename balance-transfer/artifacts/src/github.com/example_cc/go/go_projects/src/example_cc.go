@@ -1,82 +1,3 @@
-/*
- SPDX-License-Identifier: Apache-2.0
-*/
-
-// ====CHAINCODE EXECUTION SAMPLES (CLI) ==================
-
-// ==== Invoke marbles ====
-// peer chaincode invoke -C myc1 -n marbles -c '{"Args":["initMarble","marble1","blue","35","tom"]}'
-// peer chaincode invoke -C myc1 -n marbles -c '{"Args":["initMarble","marble2","red","50","tom"]}'
-// peer chaincode invoke -C myc1 -n marbles -c '{"Args":["initMarble","marble3","blue","70","tom"]}'
-// peer chaincode invoke -C myc1 -n marbles -c '{"Args":["transferMarble","marble2","jerry"]}'
-// peer chaincode invoke -C myc1 -n marbles -c '{"Args":["transferMarblesBasedOnColor","blue","jerry"]}'
-// peer chaincode invoke -C myc1 -n marbles -c '{"Args":["delete","marble1"]}'
-
-// ==== Query marbles ====
-// peer chaincode query -C myc1 -n marbles -c '{"Args":["readMarble","marble1"]}'
-// peer chaincode query -C myc1 -n marbles -c '{"Args":["getMarblesByRange","marble1","marble3"]}'
-// peer chaincode query -C myc1 -n marbles -c '{"Args":["getHistoryForMarble","marble1"]}'
-
-// Rich Query (Only supported if CouchDB is used as state database):
-// peer chaincode query -C myc1 -n marbles -c '{"Args":["queryMarblesByOwner","tom"]}'
-// peer chaincode query -C myc1 -n marbles -c '{"Args":["queryMarbles","{\"selector\":{\"owner\":\"tom\"}}"]}'
-
-// Rich Query with Pagination (Only supported if CouchDB is used as state database):
-// peer chaincode query -C myc1 -n marbles -c '{"Args":["queryMarblesWithPagination","{\"selector\":{\"owner\":\"tom\"}}","3",""]}'
-
-// INDEXES TO SUPPORT COUCHDB RICH QUERIES
-//
-// Indexes in CouchDB are required in order to make JSON queries efficient and are required for
-// any JSON query with a sort. As of Hyperledger Fabric 1.1, indexes may be packaged alongside
-// chaincode in a META-INF/statedb/couchdb/indexes directory. Each index must be defined in its own
-// text file with extension *.json with the index definition formatted in JSON following the
-// CouchDB index JSON syntax as documented at:
-// http://docs.couchdb.org/en/2.1.1/api/database/find.html#db-index
-//
-// This marbles02 example chaincode demonstrates a packaged
-// index which you can find in META-INF/statedb/couchdb/indexes/indexOwner.json.
-// For deployment of chaincode to production environments, it is recommended
-// to define any indexes alongside chaincode so that the chaincode and supporting indexes
-// are deployed automatically as a unit, once the chaincode has been installed on a peer and
-// instantiated on a channel. See Hyperledger Fabric documentation for more details.
-//
-// If you have access to the your peer's CouchDB state database in a development environment,
-// you may want to iteratively test various indexes in support of your chaincode queries.  You
-// can use the CouchDB Fauxton interface or a command line curl utility to create and update
-// indexes. Then once you finalize an index, include the index definition alongside your
-// chaincode in the META-INF/statedb/couchdb/indexes directory, for packaging and deployment
-// to managed environments.
-//
-// In the examples below you can find index definitions that support marbles02
-// chaincode queries, along with the syntax that you can use in development environments
-// to create the indexes in the CouchDB Fauxton interface or a curl command line utility.
-//
-
-//Example hostname:port configurations to access CouchDB.
-//
-//To access CouchDB docker container from within another docker container or from vagrant environments:
-// http://couchdb:5984/
-//
-//Inside couchdb docker container
-// http://127.0.0.1:5984/
-
-// Index for docType, owner.
-//
-// Example curl command line to define index in the CouchDB channel_chaincode database
-// curl -i -X POST -H "Content-Type: application/json" -d "{\"index\":{\"fields\":[\"docType\",\"owner\"]},\"name\":\"indexOwner\",\"ddoc\":\"indexOwnerDoc\",\"type\":\"json\"}" http://hostname:port/myc1_marbles/_index
-//
-
-// Index for docType, owner, size (descending order).
-//
-// Example curl command line to define index in the CouchDB channel_chaincode database
-// curl -i -X POST -H "Content-Type: application/json" -d "{\"index\":{\"fields\":[{\"size\":\"desc\"},{\"docType\":\"desc\"},{\"owner\":\"desc\"}]},\"ddoc\":\"indexSizeSortDoc\", \"name\":\"indexSizeSortDesc\",\"type\":\"json\"}" http://hostname:port/myc1_marbles/_index
-
-// Rich Query with index design doc and index name specified (Only supported if CouchDB is used as state database):
-//   peer chaincode query -C myc1 -n marbles -c '{"Args":["queryMarbles","{\"selector\":{\"docType\":\"marble\",\"owner\":\"tom\"}, \"use_index\":[\"_design/indexOwnerDoc\", \"indexOwner\"]}"]}'
-
-// Rich Query with index design doc specified only (Only supported if CouchDB is used as state database):
-//   peer chaincode query -C myc1 -n marbles -c '{"Args":["queryMarbles","{\"selector\":{\"docType\":{\"$eq\":\"marble\"},\"owner\":{\"$eq\":\"tom\"},\"size\":{\"$gt\":0}},\"fields\":[\"docType\",\"owner\",\"size\"],\"sort\":[{\"size\":\"desc\"}],\"use_index\":\"_design/indexSizeSortDoc\"}"]}'
-
 package main
 
 import (
@@ -86,10 +7,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	cid "github.com/hyperledger/fabric/core/chaincode/lib/cid"
-	"github.com/pkg/errors"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/pkg/errors"
 )
 
 // SimpleChaincode example simple Chaincode implementation
@@ -105,27 +27,68 @@ type marble struct {
 }
 
 // Information of Patient
-type patient struct {
-	ObjectType string `json:docType"`
-	PatientId string `json:"patientId"`
-	PatientSSN string `json:"patientssn"`
-	PatientUrl string `json:"patienturl"`
+
+type Patient struct {
+	ObjectType       string `json:docType"`
+	PatientId        string `json:"patientId"`
+	PatientSSN       string `json:"patientssn"`
+	PatientUrl       string `json:"patienturl"`
 	PatientFirstname string `json:"firstname"` //docType is used to distinguish the various types of objects in state database
-	PatientLastname string `json:"lastname"`    //the fieldtags are needed to keep case from bouncing around
-	DOB string `json:"dob"`
+	PatientLastname  string `json:"lastname"`  //the fieldtags are needed to keep case from bouncing around
+	DOB              string `json:"dob"`
 }
 
 // Information of Provider
-type provider struct {
-	ObjectType string `json:docType"`
-	ProviderId string `json:"providerId"`
-	ProviderEHR string `json:"providerehr"`
-	ProviderEHRURL string `json:"providerehrurl"`
+type Provider struct {
+	ObjectType        string `json:docType"`
+	ProviderId        string `json:"providerId"`
+	ProviderEHR       string `json:"providerehr"`
+	ProviderEHRURL    string `json:"providerehrurl"`
 	ProviderFirstname string `json:"firstname"` //docType is used to distinguish the various types of objects in state database
-	ProviderLastname string `json:"lastname"`    //the fieldtags are needed to keep case from bouncing around
-	Speciality string `json:"speciality"`
+	ProviderLastname  string `json:"lastname"`  //the fieldtags are needed to keep case from bouncing around
+	Speciality        string `json:"speciality"`
 }
 
+type Consent struct {
+	ObjectType string   `json:docType"`
+	Provider   Provider `json:"provider"`
+	StartTime  string   `json:"starttime"`
+	EndTime    string   `json:"endtime"`
+}
+
+type PatientDetails struct {
+	Medications   Medications   `json:"medications"`
+	Allergies     Allergies     `json:"allergies"`
+	Immunization  Immunization  `json:"immunization"`
+	PastMedicalHx PastMedicalHx `json:"pastMedicalHx"`
+	FamilyHx      FamilyHx      `json:"familyHx"`
+}
+
+type Medications struct {
+	ObjectType      string    `json:docType"`
+	Patient         Patient   `json:"patient"`
+	ProviderConsent []Consent `json:"providerconsent"`
+}
+type Allergies struct {
+	ObjectType      string    `json:docType"`
+	Patient         Patient   `json:"patient"`
+	ProviderConsent []Consent `json:"providerconsent"`
+}
+type Immunization struct {
+	ObjectType      string    `json:docType"`
+	Patient         Patient   `json:"patient"`
+	ProviderConsent []Consent `json:"providerconsent"`
+}
+type PastMedicalHx struct {
+	ObjectType      string    `json:docType"`
+	Patient         Patient   `json:"patient"`
+	ProviderConsent []Consent `json:"providerconsent"`
+}
+type FamilyHx struct {
+	ObjectType      string    `json:docType"`
+	Patient         Patient   `json:"patient"`
+	ProviderConsent []Consent `json:"providerconsent"`
+}
 
 // ===================================================================================
 // Main
@@ -150,9 +113,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	fmt.Println("invoke is running " + function)
 
 	// Handle different functions
-	if function == "initMarble" { //create a new marble
-		return t.initMarble(stub, args)
-	} else if function == "transferMarble" { //change owner of a specific marble
+	if function == "transferMarble" { //change owner of a specific marble
 		return t.transferMarble(stub, args)
 	} else if function == "transferMarblesBasedOnColor" { //transfer all marbles of a certain color
 		return t.transferMarblesBasedOnColor(stub, args)
@@ -176,96 +137,16 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.RegisterPatient(stub, args)
 	} else if function == "GetPatientBySSN" {
 		return t.GetPatientBySSN(stub, args)
-	}else if function == "GetPatientByInformation" {
+	} else if function == "GetPatientByInformation" {
 		return t.GetPatientByInformation(stub, args)
-	}else if function == "RegisterProvider" {
+	} else if function == "RegisterProvider" {
 		return t.RegisterProvider(stub, args)
-	}else if function == "GetProviderById" {
+	} else if function == "GetProviderById" {
 		return t.GetProviderById(stub, args)
 	}
 
 	fmt.Println("invoke did not find func: " + function) //error
 	return shim.Error("Received unknown function invocation")
-}
-
-// ============================================================
-// initMarble - create a new marble, store into chaincode state
-// ============================================================
-func (t *SimpleChaincode) initMarble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	var err error
-
-	//   0       1       2     3
-	// "asdf", "blue", "35", "bob"
-	if len(args) != 4 {
-		return shim.Error("Incorrect number of arguments. Expecting 4")
-	}
-
-	// ==== Input sanitation ====
-	fmt.Println("- start init marble")
-	if len(args[0]) <= 0 {
-		return shim.Error("1st argument must be a non-empty string")
-	}
-	if len(args[1]) <= 0 {
-		return shim.Error("2nd argument must be a non-empty string")
-	}
-	if len(args[2]) <= 0 {
-		return shim.Error("3rd argument must be a non-empty string")
-	}
-	if len(args[3]) <= 0 {
-		return shim.Error("4th argument must be a non-empty string")
-	}
-	marbleName := args[0]
-	color := strings.ToLower(args[1])
-	owner := strings.ToLower(args[3])
-	size, err := strconv.Atoi(args[2])
-	if err != nil {
-		return shim.Error("3rd argument must be a numeric string")
-	}
-
-	// ==== Check if marble already exists ====
-	marbleAsBytes, err := stub.GetState(marbleName)
-	if err != nil {
-		return shim.Error("Failed to get marble: " + err.Error())
-	} else if marbleAsBytes != nil {
-		fmt.Println("This marble already exists: " + marbleName)
-		return shim.Error("This marble already exists: " + marbleName)
-	}
-
-	// ==== Create marble object and marshal to JSON ====
-	objectType := "marble"
-	marble := &marble{objectType, marbleName, color, size, owner}
-	marbleJSONasBytes, err := json.Marshal(marble)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	//Alternatively, build the marble json string manually if you don't want to use struct marshalling
-	//marbleJSONasString := `{"docType":"Marble",  "name": "` + marbleName + `", "color": "` + color + `", "size": ` + strconv.Itoa(size) + `, "owner": "` + owner + `"}`
-	//marbleJSONasBytes := []byte(str)
-
-	// === Save marble to state ===
-	err = stub.PutState(marbleName, marbleJSONasBytes)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	//  ==== Index the marble to enable color-based range queries, e.g. return all blue marbles ====
-	//  An 'index' is a normal key/value entry in state.
-	//  The key is a composite key, with the elements that you want to range query on listed first.
-	//  In our case, the composite key is based on indexName~color~name.
-	//  This will enable very efficient state range queries based on composite keys matching indexName~color~*
-	indexName := "color~name"
-	colorNameIndexKey, err := stub.CreateCompositeKey(indexName, []string{marble.Color, marble.Name})
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
-	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
-	value := []byte{0x00}
-	stub.PutState(colorNameIndexKey, value)
-
-	// ==== Marble saved and indexed. Return success ====
-	fmt.Println("- end init marble")
-	return shim.Success(nil)
 }
 
 // ============================================================
@@ -317,28 +198,62 @@ func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args
 		return shim.Error("This marble already exists: " + patientData)
 	}*/
 
-	//==== Create marble object and marshal to JSON ====
+	//==== Create Patient object and marshal to JSON ====
 	objectType := "Patient"
-	patient := &patient{objectType, patientId, patientSSN, patientUrl, firstname, lastname, DOB}
-	//fmt.Println(patients.firstname)
-
+	patient := &Patient{objectType, patientId, patientSSN, patientUrl, firstname, lastname, DOB}
 	patientJSONasBytes, err := json.Marshal(patient)
+
+	//==== Create patientMedications object and marshal to JSON ====
+	var patientdetails PatientDetails
+	patientdetails.Medications.ObjectType = "Medications"
+	patientdetails.Medications.Patient = *patient
+	var defaultConsent Consent
+	provider := &Provider{"Provider", "provider001", "mtbc", "mtbc", "faisal", "faisal", "faisal"}
+	defaultConsent.Provider = *provider
+	defaultConsent.StartTime = time.Now().Format("01-02-2006")
+	defaultConsent.EndTime = time.Now().Format("01-02-2006")
+	patientdetails.Medications.ProviderConsent = []Consent{}
+	patientdetails.Medications.ProviderConsent = append(patientdetails.Medications.ProviderConsent, defaultConsent)
+
+	//==== Create patientAllergies object and marshal to JSON ====
+	patientdetails.Allergies.ObjectType = "Allergies"
+	patientdetails.Allergies.Patient = *patient
+	patientdetails.Allergies.ProviderConsent = []Consent{}
+	patientdetails.Allergies.ProviderConsent = append(patientdetails.Allergies.ProviderConsent, defaultConsent)
+
+	//==== Create patientImmunizations object and marshal to JSON ====
+	patientdetails.Immunization.ObjectType = "Immunizations"
+	patientdetails.Immunization.Patient = *patient
+	patientdetails.Immunization.ProviderConsent = []Consent{}
+	patientdetails.Immunization.ProviderConsent = append(patientdetails.Immunization.ProviderConsent, defaultConsent)
+
+	//==== Create patientPastMedicalHx object and marshal to JSON ====
+	patientdetails.PastMedicalHx.ObjectType = "PastMedicalHx"
+	patientdetails.PastMedicalHx.Patient = *patient
+	patientdetails.PastMedicalHx.ProviderConsent = []Consent{}
+	patientdetails.PastMedicalHx.ProviderConsent = append(patientdetails.PastMedicalHx.ProviderConsent, defaultConsent)
+
+	//==== Create patientFamilyHx object and marshal to JSON ====
+	patientdetails.FamilyHx.ObjectType = "FamilyHx"
+	patientdetails.FamilyHx.Patient = *patient
+	patientdetails.FamilyHx.ProviderConsent = []Consent{}
+	patientdetails.FamilyHx.ProviderConsent = append(patientdetails.FamilyHx.ProviderConsent, defaultConsent)
+
+	PatientDetailsJSONasBytes, err := json.Marshal(&patientdetails)
+
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	//Alternatively, build the marble json string manually if you don't want to use struct marshalling
-	//marbleJSONasString := `{"docType":"Marble",  "name": "` + marbleName + `", "color": "` + color + `", "size": ` + strconv.Itoa(size) + `, "owner": "` + owner + `"}`
-	//marbleJSONasBytes := []byte(str)
 
+	// === Save patientDetails to state ===
+	err = stub.PutPrivateData("patientDetails", patientId, PatientDetailsJSONasBytes)
+	//err = stub.PutState(patientId, PatientDetailsJSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
 
-	//Alternatively, build the marble json string manually if you don't want to use struct marshalling
-	//patientJSONasString := `{"docType":"Patient",  "patientId": "` + patientId + `", "patientSSN": "` + patientSSN + `", "patientUrl": ` + patientUrl + `, "firstname": "` + firstname + `, "DOB": "` + DOB + `, "email": "` + email + `, "mobile": "` + mobile + `"}`
-	//patientJSONasBytes := []byte(patientJSONasString)
-
-
-	// === Save Patient to state ===
-	err = stub.PutPrivateData("patientDetails", patientId, patientJSONasBytes)
-	//err = stub.PutState(patientId, patientJSONasBytes)
+	//=== Save Patient to state ===
+	err = stub.PutState(patientId, patientJSONasBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -362,7 +277,6 @@ func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args
 	//fmt.Println("- end register patient")
 	return shim.Success(nil)
 }
-
 
 // ============================================================
 // RegisterPatient - create a new Provider, store into chaincode state
@@ -415,7 +329,7 @@ func (t *SimpleChaincode) RegisterProvider(stub shim.ChaincodeStubInterface, arg
 
 	//==== Create Provider object and marshal to JSON ====
 	objectType := "Provider"
-	provider := &provider{objectType, providerId, providerEHR, providerEHRUrl, firstname, lastname, speciality}
+	provider := &Provider{objectType, providerId, providerEHR, providerEHRUrl, firstname, lastname, speciality}
 	//fmt.Println(Provider.firstname)
 
 	providerJSONasBytes, err := json.Marshal(provider)
@@ -426,11 +340,9 @@ func (t *SimpleChaincode) RegisterProvider(stub shim.ChaincodeStubInterface, arg
 	//marbleJSONasString := `{"docType":"Marble",  "name": "` + marbleName + `", "color": "` + color + `", "size": ` + strconv.Itoa(size) + `, "owner": "` + owner + `"}`
 	//marbleJSONasBytes := []byte(str)
 
-
 	//Alternatively, build the marble json string manually if you don't want to use struct marshalling
 	//patientJSONasString := `{"docType":"Patient",  "patientId": "` + patientId + `", "patientSSN": "` + patientSSN + `", "patientUrl": ` + patientUrl + `, "firstname": "` + firstname + `, "DOB": "` + DOB + `, "email": "` + email + `, "mobile": "` + mobile + `"}`
 	//patientJSONasBytes := []byte(patientJSONasString)
-
 
 	// === Save Provider to state ===
 
@@ -459,8 +371,6 @@ func (t *SimpleChaincode) RegisterProvider(stub shim.ChaincodeStubInterface, arg
 	//fmt.Println("- end register patient")
 	return shim.Success(nil)
 }
-
-
 
 // ==============================================
 // Search Patient using its SSN
@@ -507,8 +417,6 @@ func (t *SimpleChaincode) GetProviderById(stub shim.ChaincodeStubInterface, args
 	return shim.Success(queryResults)
 }
 
-
-
 // ==============================================
 // Search Patient using its Info
 // ==============================================
@@ -524,7 +432,7 @@ func (t *SimpleChaincode) GetPatientByInformation(stub shim.ChaincodeStubInterfa
 	lname := strings.ToLower(args[1])
 	dob := strings.ToLower(args[2])
 
-	queryString := fmt.Sprintf("{\"selector\":{\"firstname\":\"%s\",\"lastname\":\"%s\",\"dob\":\"%s\"}}", fname,lname,dob)
+	queryString := fmt.Sprintf("{\"selector\":{\"firstname\":\"%s\",\"lastname\":\"%s\",\"dob\":\"%s\"}}", fname, lname, dob)
 
 	// queryString := fmt.Sprintf("{\"selector\":{\"ObjectType\":\"Patient\",\"_id\":\"%s\"}}", id)
 
@@ -535,21 +443,19 @@ func (t *SimpleChaincode) GetPatientByInformation(stub shim.ChaincodeStubInterfa
 	return shim.Success(queryResults)
 }
 
- func (s *SimpleChaincode) getRole(stub shim.ChaincodeStubInterface) (string, error) {
- 	role, ok, err := cid.GetAttributeValue(stub, "role")
+func (s *SimpleChaincode) getRole(stub shim.ChaincodeStubInterface) (string, error) {
+	role, ok, err := cid.GetAttributeValue(stub, "role")
 
- 	if err != nil {
- 		return "", err
- 	}
+	if err != nil {
+		return "", err
+	}
 
- 	if !ok {
- 		return "", errors.New("role attribute is missing")
- 	}
+	if !ok {
+		return "", errors.New("role attribute is missing")
+	}
 
- 	return role, nil
- }
-
-
+	return role, nil
+}
 
 // ===============================================
 // readMarble - read a marble from chaincode state

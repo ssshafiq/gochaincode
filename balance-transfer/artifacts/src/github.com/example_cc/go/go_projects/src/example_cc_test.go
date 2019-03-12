@@ -13,10 +13,14 @@ func checkInit(t *testing.T, stub *shim.MockStub, args [][]byte) {
 		fmt.Println("Init failed", string(res.Message))
 		t.FailNow()
 	}
+	if res.Status == shim.OK {
+		fmt.Println("Init success")
+	}
 }
 
 func checkState(t *testing.T, stub *shim.MockStub, name string, value string) {
 	bytes := stub.State[name]
+	fmt.Println(".............State............")
 	if bytes == nil {
 		fmt.Println("State", name, "failed to get value")
 		t.FailNow()
@@ -25,75 +29,44 @@ func checkState(t *testing.T, stub *shim.MockStub, name string, value string) {
 		fmt.Println("State value", name, "was not", value, "as expected")
 		t.FailNow()
 	}
+	fmt.Println(".............State............")
 }
 
-func checkQuery(t *testing.T, stub *shim.MockStub, name string, value string) {
-	res := stub.MockInvoke("1", [][]byte{[]byte("query"), []byte(name)})
-	if res.Status != shim.OK {
-		fmt.Println("Query", name, "failed", string(res.Message))
-		t.FailNow()
-	}
-	if res.Payload == nil {
-		fmt.Println("Query", name, "failed to get value")
-		t.FailNow()
-	}
-	if string(res.Payload) != value {
-		fmt.Println("Query value", name, "was not", value, "as expected")
-		t.FailNow()
-	}
-}
+func Test_Init(t *testing.T) {
+	simpleCC := new(SimpleChaincode)
+	mockStub := shim.NewMockStub("mockstub", simpleCC)
+	txId := "mockTxID"
 
-func checkInvoke(t *testing.T, stub *shim.MockStub, args [][]byte) {
-	res := stub.MockInvoke("1", args)
-	if res.Status != shim.OK {
-		fmt.Println("Invoke", args, "failed", string(res.Message))
+	mockStub.MockTransactionStart(txId)
+	response := simpleCC.Init(mockStub)
+	mockStub.MockTransactionEnd(txId)
+	if s := response.GetStatus(); s != 200 {
+		fmt.Println("Init test failed")
 		t.FailNow()
 	}
 }
 
-func TestExample02_Init(t *testing.T) {
-	fmt.Println("Init")
-	scc := new(SimpleChaincode)
-	fmt.Println(scc)
-	stub := shim.NewMockStub("cc1", scc)
+func Test_initMarble(t *testing.T) {
+	simpleCC := new(SimpleChaincode)
+	mockStub := shim.NewMockStub("mockstub", simpleCC)
+	txId := "mockTxID"
 
-	// Init A=123 B=234
-	checkInit(t, stub, [][]byte{[]byte("init"), []byte("A"), []byte("123"), []byte("B"), []byte("234")})
+	args := []string{"123123", "asdasd", "asdasd", "asdasd", "123", "234"}
+	args1 := []string{"123123"}
 
-	checkState(t, stub, "A", "123")
-	checkState(t, stub, "B", "234")
-}
+	fmt.Println("---------Register---------")
+	mockStub.MockTransactionStart(txId)
+	response := simpleCC.RegisterPatient(mockStub, args)
+	fmt.Println("---------Get Patient---------")
+	response = simpleCC.readMarble(mockStub, args1)
+	mockStub.MockTransactionEnd(txId)
 
-func TestExample02_Query(t *testing.T) {
-	scc := new(SimpleChaincode)
-	stub := shim.NewMockStub("cc1", scc)
+	fmt.Println("Status: " + fmt.Sprint(response.GetStatus()))
+	fmt.Println("Payload: " + string(response.GetPayload()))
+	fmt.Println("Message: " + response.GetMessage())
 
-	// Init A=345 B=456
-	checkInit(t, stub, [][]byte{[]byte("init"), []byte("A"), []byte("345"), []byte("B"), []byte("456")})
-
-	// Query A
-	checkQuery(t, stub, "A", "345")
-
-	// Query B
-	checkQuery(t, stub, "B", "456")
-}
-
-func TestExample02_Invoke(t *testing.T) {
-	scc := new(SimpleChaincode)
-	stub := shim.NewMockStub("cc1", scc)
-
-	// Init A=567 B=678
-	checkInit(t, stub, [][]byte{[]byte("init"), []byte("A"), []byte("567"), []byte("B"), []byte("678")})
-
-	// Invoke A->B for 123
-	checkInvoke(t, stub, [][]byte{[]byte("invoke"), []byte("A"), []byte("B"), []byte("123")})
-	checkQuery(t, stub, "A", "444")
-	checkQuery(t, stub, "B", "801")
-
-	// Invoke B->A for 234
-	checkInvoke(t, stub, [][]byte{[]byte("invoke"), []byte("B"), []byte("A"), []byte("234")})
-	checkQuery(t, stub, "A", "678")
-	checkQuery(t, stub, "B", "567")
-	checkQuery(t, stub, "A", "678")
-	checkQuery(t, stub, "B", "567")
+	if s := response.GetStatus(); s != 200 {
+		fmt.Println("initMarble test failed")
+		t.FailNow()
+	}
 }
