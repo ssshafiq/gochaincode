@@ -28,11 +28,20 @@ type marble struct {
 
 // Information of Patient
 
+<<<<<<< HEAD
 type Patient struct {
 	ObjectType       string `json:docType"`
 	PatientId        string `json:"patientId"`
 	PatientSSN       string `json:"patientssn"`
 	PatientUrl       string `json:"patienturl"`
+=======
+
+type Patient struct {
+	ObjectType string `json:docType"`
+	PatientId string `json:"patientId"`
+	PatientSSN string `json:"patientssn"`
+	PatientUrl string `json:"patienturl"`
+>>>>>>> 14528d37bde45330bafc9ddaad86a71d41b19a02
 	PatientFirstname string `json:"firstname"` //docType is used to distinguish the various types of objects in state database
 	PatientLastname  string `json:"lastname"`  //the fieldtags are needed to keep case from bouncing around
 	DOB              string `json:"dob"`
@@ -40,16 +49,24 @@ type Patient struct {
 
 // Information of Provider
 type Provider struct {
+<<<<<<< HEAD
 	ObjectType        string `json:docType"`
 	ProviderId        string `json:"providerId"`
 	ProviderEHR       string `json:"providerehr"`
 	ProviderEHRURL    string `json:"providerehrurl"`
+=======
+	ObjectType string `json:docType"`
+	ProviderId string `json:"providerId"`
+	ProviderEHR string `json:"providerehr"`
+	ProviderEHRURL string `json:"providerehrurl"`
+>>>>>>> 14528d37bde45330bafc9ddaad86a71d41b19a02
 	ProviderFirstname string `json:"firstname"` //docType is used to distinguish the various types of objects in state database
 	ProviderLastname  string `json:"lastname"`  //the fieldtags are needed to keep case from bouncing around
 	Speciality        string `json:"speciality"`
 }
 
 type Consent struct {
+<<<<<<< HEAD
 	ObjectType string   `json:docType"`
 	Provider   Provider `json:"provider"`
 	StartTime  string   `json:"starttime"`
@@ -89,6 +106,22 @@ type FamilyHx struct {
 	Patient         Patient   `json:"patient"`
 	ProviderConsent []Consent `json:"providerconsent"`
 }
+=======
+	ObjectType string `json:docType"`
+	Provider
+	StartTime time.Time
+	EndTime   time.Time
+}
+
+type medication struct {
+	ObjectType string `json:docType"`
+	Patient
+	ProviderConsent[] Consent
+}
+
+
+
+>>>>>>> 14528d37bde45330bafc9ddaad86a71d41b19a02
 
 // ===================================================================================
 // Main
@@ -201,6 +234,7 @@ func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args
 	//==== Create Patient object and marshal to JSON ====
 	objectType := "Patient"
 	patient := &Patient{objectType, patientId, patientSSN, patientUrl, firstname, lastname, DOB}
+<<<<<<< HEAD
 	patientJSONasBytes, err := json.Marshal(patient)
 
 	//==== Create patientMedications object and marshal to JSON ====
@@ -240,6 +274,24 @@ func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args
 	patientdetails.FamilyHx.ProviderConsent = append(patientdetails.FamilyHx.ProviderConsent, defaultConsent)
 
 	PatientDetailsJSONasBytes, err := json.Marshal(&patientdetails)
+=======
+
+	patientJSONasBytes, err := json.Marshal(patient)
+	var patientMed medication;
+	patientMed.ObjectType = "Medication";
+	patientMed.Patient = *patient;
+	var defaultConsent Consent
+	provider := &Provider{"Provider", "provider001", "mtbc", "mtbc", "faisal", "faisal", "faisal"}
+	defaultConsent.Provider = *provider
+	defaultConsent.StartTime = time.Now()
+	defaultConsent.EndTime = time.Now()
+	patientMed.ProviderConsent  = make([]Consent,10)
+	patientMed.ProviderConsent  = append(patientMed.ProviderConsent, defaultConsent)
+
+	medJSONasBytes, err := json.Marshal(&patientMed)
+
+	//fmt.Println(patients.firstname)
+>>>>>>> 14528d37bde45330bafc9ddaad86a71d41b19a02
 
 	if err != nil {
 		return shim.Error(err.Error())
@@ -252,7 +304,15 @@ func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args
 		return shim.Error(err.Error())
 	}
 
+<<<<<<< HEAD
 	//=== Save Patient to state ===
+=======
+	// === Save Patient to state ===
+	err = stub.PutPrivateData("patientDetails", patientId, medJSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+>>>>>>> 14528d37bde45330bafc9ddaad86a71d41b19a02
 	err = stub.PutState(patientId, patientJSONasBytes)
 	if err != nil {
 		return shim.Error(err.Error())

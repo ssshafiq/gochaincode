@@ -77,7 +77,7 @@ curl -s -X POST \
   -d '{
 	"peers": ["peer0.org1.example.com","peer0.org2.example.com"],
 	"fcn":"RegisterPatient",
-	"args":["123","321","patient.mtbc.com#123","ibrahim","132","123"]
+	"args":["1234","321","patient.mtbc.com#123","ibrahim","132","123"]
 }'
 echo
 echo ;;
