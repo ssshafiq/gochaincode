@@ -377,11 +377,22 @@ func (t *SimpleChaincode) RegisterProvider(stub shim.ChaincodeStubInterface, arg
 // ==============================================
 func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
+	fmt.Println("In seachpatient by sssn")
+	
 	//   0
 	// "bob"
 	if len(args) < 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
+
+
+	role, err := t.getRole(stub)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	fmt.Println("=======Role==============")
+	fmt.Println(role)
 
 	ssn := strings.ToLower(args[0])
 
@@ -444,11 +455,31 @@ func (t *SimpleChaincode) GetPatientByInformation(stub shim.ChaincodeStubInterfa
 }
 
 func (s *SimpleChaincode) getRole(stub shim.ChaincodeStubInterface) (string, error) {
+
+	 str := "ID: " 
+	id, err := cid.GetID(stub)
+	if err != nil {
+		fmt.Println("Error - cide.GetID()")
+	}
+	str = str + id;
+
+	mspid, err := cid.GetMSPID(stub)
+	if err != nil {
+		fmt.Println("Error - cide.GetMSPID()")
+	}
+
+	str = str  + "MSPID " + mspid
+ 
+
 	role, ok, err := cid.GetAttributeValue(stub, "role")
 
 	if err != nil {
 		return "", err
 	}
+
+	str = str  + "role " + role
+
+	return "", errors.New("MSPID: "+str+" ")
 
 	if !ok {
 		return "", errors.New("role attribute is missing")
