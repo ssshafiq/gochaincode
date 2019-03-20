@@ -64,6 +64,8 @@ echo "3) Query Patient by SSN"
 echo "4) Query Patient by Information"
 echo "5) Register Provider"
 echo "6) Query Provider by providerId"
+echo "7) Update Provider Access"
+
 read option
 
 case $option in
@@ -77,7 +79,7 @@ curl -s -X POST \
   -d '{
 	"peers": ["peer0.org1.example.com","peer0.org2.example.com"],
 	"fcn":"RegisterPatient",
-	"args":["1234","321","patient.mtbc.com#123","ibrahim","132","123"]
+	"args":["123","321","patient.mtbc.com#123","ibrahim","132","123"]
 }'
 echo
 echo ;;
@@ -111,7 +113,7 @@ curl -s -X POST \
   -d '{
 	"peers": ["peer0.org1.example.com","peer0.org2.example.com"],
 	"fcn":"RegisterProvider",
-	"args":["7891","TalkEHR","secure.talkehr.com","saad","buth","gyno"]
+	"args":["1234","TalkEHR","secure.talkehr.com","saad","buth","gyno"]
 }'
 echo
 echo ;;
@@ -122,6 +124,22 @@ curl -s -X GET \
   "http://localhost:4000/channels/mychannel/chaincodes/$cc?peer=peer0.org2.example.com&fcn=GetProviderById&args=%5B%22789%22%5D" \
   -H "authorization: Bearer $ORG2_TOKEN" \
   -H "content-type: application/json"
+echo
+echo ;;
+
+
+"7") 
+echo "Update Provider Access"
+echo
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/chaincodes/$cc \
+  -H "authorization: Bearer $ORG1_TOKEN" \
+  -H "content-type: application/json" \
+  -d '{
+	"peers": ["peer0.org1.example.com","peer0.org2.example.com"],
+	"fcn":"UpdateProviderAccess",
+	"args":["{\"_id\": \"1234\",\"_rev\":\"1-a5da12d24b49fc67ca8d648815d7ecfa\",\"allergies\": {\"ObjectType\": \"Allergies\",\"patient\": { \"ObjectType\": \"Patient\", \"dob\": \"123\", \"firstname\": \"ibrahim\", \"lastname\": \"132\", \"patientId\": \"1234\", \"patientssn\": \"321\", \"patienturl\": \"patient.mtbc.com#123\" }, \"providerconsent\": [ { \"ObjectType\": \"\", \"endtime\": \"03-18-2019\", \"provider\": { \"ObjectType\": \"Provider\", \"firstname\": \"faisal\", \"lastname\": \"faisal\", \"providerId\": \"provider001\", \"providerehr\": \"mtbc\", \"providerehrurl\": \"mtbc\", \"speciality\": \"faisal\" }, \"starttime\": \"03-18-2019\" } ] }, \"familyHx\": { \"ObjectType\": \"FamilyHx\", \"patient\": { \"ObjectType\": \"Patient\", \"dob\": \"123\", \"firstname\": \"ibrahim\", \"lastname\": \"132\", \"patientId\": \"1234\", \"patientssn\": \"321\", \"patienturl\": \"patient.mtbc.com#123\" }, \"providerconsent\": [ { \"ObjectType\": \"\", \"endtime\": \"03-18-2019\", \"provider\": { \"ObjectType\": \"Provider\", \"firstname\": \"faisal\", \"lastname\": \"faisal\", \"providerId\": \"provider001\", \"providerehr\": \"mtbc\", \"providerehrurl\": \"mtbc\", \"speciality\": \"faisal\" }, \"starttime\": \"03-18-2019\" } ] }, \"immunization\": { \"ObjectType\": \"Immunizations\", \"patient\": { \"ObjectType\": \"Patient\", \"dob\": \"123\", \"firstname\": \"ibrahim\", \"lastname\": \"132\", \"patientId\": \"1234\", \"patientssn\": \"321\", \"patienturl\": \"patient.mtbc.com#123\" }, \"providerconsent\": [ { \"ObjectType\": \"\", \"endtime\": \"03-18-2019\", \"provider\": { \"ObjectType\": \"Provider\", \"firstname\": \"faisal\", \"lastname\": \"faisal\", \"providerId\": \"provider001\", \"providerehr\": \"mtbc\", \"providerehrurl\": \"mtbc\", \"speciality\": \"faisal\" }, \"starttime\": \"03-18-2019\" } ] }, \"medications\": { \"ObjectType\": \"Medications\", \"patient\": { \"ObjectType\": \"Patient\", \"dob\": \"123\", \"firstname\": \"ibrahim\", \"lastname\": \"132\", \"patientId\": \"1234\", \"patientssn\": \"321\", \"patienturl\": \"patient.mtbc.com#123\" }, \"providerconsent\": [ { \"ObjectType\": \"\", \"endtime\": \"03-18-2019\", \"provider\": { \"ObjectType\": \"Provider\", \"firstname\": \"faisal\", \"lastname\": \"faisal\", \"providerId\": \"provider001\", \"providerehr\": \"mtbc\", \"providerehrurl\": \"mtbc\", \"speciality\": \"faisal\" }, \"starttime\": \"03-18-2019\" } ] }, \"pastMedicalHx\": { \"ObjectType\": \"PastMedicalHx\", \"patient\": { \"ObjectType\": \"Patient\", \"dob\": \"123\", \"firstname\": \"ibrahim\", \"lastname\": \"132\", \"patientId\": \"1234\", \"patientssn\": \"321\", \"patienturl\": \"patient.mtbc.com#123\" }, \"providerconsent\": [ { \"ObjectType\": \"\", \"endtime\": \"03-18-2019\", \"provider\": { \"ObjectType\": \"Provider\", \"firstname\": \"faisal\", \"lastname\": \"faisal\", \"providerId\": \"provider001\", \"providerehr\": \"mtbc\", \"providerehrurl\": \"mtbc\", \"speciality\": \"faisal\" }, \"starttime\": \"03-18-2019\" } ] }, \"~version\": \"\\u0000CgMBBgA=\" }"]
+}'
 echo
 echo ;;
 

@@ -45,6 +45,13 @@
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
+			"checksumSHA1": "dvabztWVQX8f6oMLRyv4dLH+TGY=",
+			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "34c6fa2dc70986bccbbffcc6130f6920a924b075",
+			"revisionTime": "2019-03-04T09:57:49Z"
+		},
+		{
 			"checksumSHA1": "hAjf49/v5dubqbUaCu7mE9/7VVA=",
 			"origin": "github.com/hyperledger/fabric/vendor/github.com/docker/docker/api/types",
 			"path": "github.com/docker/docker/api/types",
@@ -318,211 +325,270 @@
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
+			"checksumSHA1": "g7JU+buhfkepRtQoHWqx3uzS1sU=",
+			"path": "github.com/hyperledger/fabric-sdk-go/pkg/common/logging",
+			"revision": "f198238ee7dac8113e84a445a49fc4daf37bc251",
+			"revisionTime": "2019-03-06T16:43:12Z"
+		},
+		{
+			"checksumSHA1": "QUbrca10efoIg8aYc32P8htp+tQ=",
+			"path": "github.com/hyperledger/fabric-sdk-go/pkg/core/logging/api",
+			"revision": "f198238ee7dac8113e84a445a49fc4daf37bc251",
+			"revisionTime": "2019-03-06T16:43:12Z"
+		},
+		{
+			"checksumSHA1": "qoVCaWz1pqXCm+OYeSeFS5sXSRk=",
+			"path": "github.com/hyperledger/fabric-sdk-go/pkg/core/logging/metadata",
+			"revision": "f198238ee7dac8113e84a445a49fc4daf37bc251",
+			"revisionTime": "2019-03-06T16:43:12Z"
+		},
+		{
+			"checksumSHA1": "KashzpmBwatMg6A6MTKIGMmUtfM=",
+			"path": "github.com/hyperledger/fabric-sdk-go/pkg/core/logging/modlog",
+			"revision": "f198238ee7dac8113e84a445a49fc4daf37bc251",
+			"revisionTime": "2019-03-06T16:43:12Z"
+		},
+		{
 			"checksumSHA1": "AAsn1GYGJiULNGDQayUs7iz3xd8=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/bccsp",
 			"path": "github.com/hyperledger/fabric/bccsp",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "3xHDYuVgBhDp+x/5g5mRxfHvmiE=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/bccsp/factory",
 			"path": "github.com/hyperledger/fabric/bccsp/factory",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "LM1UzUc5IbMq+qA0ydI24SXjd3A=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/bccsp/idemix",
 			"path": "github.com/hyperledger/fabric/bccsp/idemix",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "/T1F/kQShUPLV6ZF5xL+I0+57ss=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/bccsp/idemix/bridge",
 			"path": "github.com/hyperledger/fabric/bccsp/idemix/bridge",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "Pd0W2E5MX2y9taYFXIWdMWiXN2g=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/bccsp/idemix/handlers",
 			"path": "github.com/hyperledger/fabric/bccsp/idemix/handlers",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "qGKv38J/XnWVTY9ffBk/nwA8wK4=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/bccsp/pkcs11",
 			"path": "github.com/hyperledger/fabric/bccsp/pkcs11",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "Uf5hHFMenxDgEsPCLTPKVLOaE+w=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/bccsp/signer",
 			"path": "github.com/hyperledger/fabric/bccsp/signer",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "o7gfSOxuo62Tmaph3NWcgb1L6So=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/bccsp/sw",
 			"path": "github.com/hyperledger/fabric/bccsp/sw",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "6VBws8YPmb8k0EJ7VjpYqJIMof0=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/bccsp/utils",
 			"path": "github.com/hyperledger/fabric/bccsp/utils",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "n+ZKx3gMoBi4t0fN84vzz0r2uCM=",
-			"origin": "vendor/github.com/hyperledger/fabric/common/attrmgr",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/common/attrmgr",
 			"path": "github.com/hyperledger/fabric/common/attrmgr",
-			"revision": ""
+			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
+			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "vX+Bwow/VfvB/EZvz2RkAdV6nnM=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/common/crypto",
 			"path": "github.com/hyperledger/fabric/common/crypto",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "kRXOIuBPqil7KmN4hKDprfXL6jU=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/common/flogging",
 			"path": "github.com/hyperledger/fabric/common/flogging",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "Htx+Y8oXApXzVw6ZWYic+RVEmT0=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/common/flogging/fabenc",
 			"path": "github.com/hyperledger/fabric/common/flogging/fabenc",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "q7lCcwUNBlcHKCGt4t5T5KouhRo=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/common/ledger",
 			"path": "github.com/hyperledger/fabric/common/ledger",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "TnGY+eTyKR2U7vUUyOqu/txOs2c=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/common/metadata",
 			"path": "github.com/hyperledger/fabric/common/metadata",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "WOLMxJCYaKYleZvmGEClhuhM3BE=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/common/metrics",
 			"path": "github.com/hyperledger/fabric/common/metrics",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "MX+BGZBh0pf2Bpn6CJc6f45T6Xg=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/common/semaphore",
 			"path": "github.com/hyperledger/fabric/common/semaphore",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "ulYpabmCnhmeJfUb0H1HKu386oM=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/common/util",
 			"path": "github.com/hyperledger/fabric/common/util",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "/F6PHdUhzMueIjl8FC90rG4jvEQ=",
-			"origin": "vendor/github.com/hyperledger/fabric/core/chaincode/lib/cid",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/core/chaincode/lib/cid",
 			"path": "github.com/hyperledger/fabric/core/chaincode/lib/cid",
-			"revision": ""
+			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
+			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "LCcSxtJB9td5STSQxK5/E0t62Zg=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/core/chaincode/platforms",
 			"path": "github.com/hyperledger/fabric/core/chaincode/platforms",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "8az94pV9TSvtiEtsyx+SlWF1CgY=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/ccmetadata",
 			"path": "github.com/hyperledger/fabric/core/chaincode/platforms/ccmetadata",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "8yz9QAMoQK4jmaWqT5VWE8FlLkE=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/core/chaincode/shim",
 			"path": "github.com/hyperledger/fabric/core/chaincode/shim",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "crueK9qtTS/jmPMisEzdE6BTKQ4=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/core/comm",
 			"path": "github.com/hyperledger/fabric/core/comm",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "p9rCJInevSS+CEKjoy2fTpQ/iyU=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/core/config",
 			"path": "github.com/hyperledger/fabric/core/config",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "uhX21uqXTiE8MbjtSPwLDCKuzhI=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/core/container/util",
 			"path": "github.com/hyperledger/fabric/core/container/util",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "PZEB7eAHAev0KuBWBfDvfGGIO9c=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/idemix",
 			"path": "github.com/hyperledger/fabric/idemix",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "pEJVtMXCLTb6a7SaKzcuWi9/U4s=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/msp",
 			"path": "github.com/hyperledger/fabric/msp",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "dcgjVXI4SAqKc8XG+i+hb25Cmgk=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/protos/common",
 			"path": "github.com/hyperledger/fabric/protos/common",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "VUi6bvt1ZYup3fiikhQOFhuGuNs=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/protos/ledger/queryresult",
 			"path": "github.com/hyperledger/fabric/protos/ledger/queryresult",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "FigxUdzgL1zkIh8qXOL94Yy/cKI=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/protos/ledger/rwset",
 			"path": "github.com/hyperledger/fabric/protos/ledger/rwset",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "crE3MubjWgXerBt9Fc6jJth5CeM=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset",
 			"path": "github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "ZzWCzHsWRI/LAxhZYUMqVcIAsZQ=",
-			"origin": "vendor/github.com/hyperledger/fabric/protos/msp",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/protos/msp",
 			"path": "github.com/hyperledger/fabric/protos/msp",
-			"revision": ""
+			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
+			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "K7L6tGN3tNlv9559iVUcrtSryG0=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/protos/peer",
 			"path": "github.com/hyperledger/fabric/protos/peer",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "0CehDkm2dbUkOKC6IOlNT5cB+HY=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/protos/token",
 			"path": "github.com/hyperledger/fabric/protos/token",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
 			"checksumSHA1": "53+JYLyMMhuYARn89whgCkhWMx0=",
+			"origin": "github.com/hyperledger/fabric/vendor/github.com/hyperledger/fabric/protos/utils",
 			"path": "github.com/hyperledger/fabric/protos/utils",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
@@ -612,6 +678,13 @@
 			"revisionTime": "2019-03-06T18:46:36Z"
 		},
 		{
+			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
+			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "34c6fa2dc70986bccbbffcc6130f6920a924b075",
+			"revisionTime": "2019-03-04T09:57:49Z"
+		},
+		{
 			"checksumSHA1": "Z/fKl+rz98nBfIydrqQjtpnOwYY=",
 			"origin": "github.com/hyperledger/fabric/vendor/github.com/sirupsen/logrus",
 			"path": "github.com/sirupsen/logrus",
@@ -645,6 +718,12 @@
 			"path": "github.com/spf13/viper",
 			"revision": "45ccbcb4ebf97c0747b8a5bfcfabc6557c7a8aa2",
 			"revisionTime": "2019-03-06T18:46:36Z"
+		},
+		{
+			"checksumSHA1": "IIsn0Wdi5rHU8xca+FzDd+YeYlc=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "34c6fa2dc70986bccbbffcc6130f6920a924b075",
+			"revisionTime": "2019-03-04T09:57:49Z"
 		},
 		{
 			"checksumSHA1": "A6QQ5N4TcV9UBnZez5VfXC0XHLI=",

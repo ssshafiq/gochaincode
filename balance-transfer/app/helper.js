@@ -63,7 +63,7 @@ async function getClientForOrg (userorg, username) {
 	return client;
 }
 
-var getRegisteredUser = async function(username, userOrg, isJson, role) {
+var getRegisteredUser = async function(username, userOrg, isJson, role, id) {
 	try {
 		var client = await getClientForOrg(userOrg);
 		logger.debug('Successfully initialized the credential stores');
@@ -82,7 +82,7 @@ var getRegisteredUser = async function(username, userOrg, isJson, role) {
 				enrollmentID: username,
 				affiliation: userOrg.toLowerCase() + '.department1',
 				role: "client",
-				attrs: [{ name: "role", value: "PAT0", ecert: true }]
+				attrs: [{ name: "role", value: role, ecert: true },{ name: "id", value: id, ecert: true }]
 			}, adminUserObj);
 
 
@@ -95,8 +95,7 @@ var getRegisteredUser = async function(username, userOrg, isJson, role) {
 			// var enrollment =  await caClient.enroll({ enrollmentID: username, enrollmentSecret: secret, attr_reqs: [{ name: "role", optional: false }]});
 
             // logger.debug('Successfully  enroll %s',enrollment);
-		
-
+	
 			logger.debug('Successfully got the secret for user %s',username);
 			user = await client.setUserContext({username:username, password:secret});
 			logger.debug('Successfully enrolled username %s  and setUserContext on the client object', username);

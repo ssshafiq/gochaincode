@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	cid "github.com/hyperledger/fabric/core/chaincode/lib/cid"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -90,6 +90,23 @@ type FamilyHx struct {
 	ProviderConsent []Consent `json:"providerconsent"`
 }
 
+type PatientUnmarshal struct 
+{
+	Key string
+	Record Patient `json:"Patient"`
+}
+
+type PatientDetailsUnmarshal struct {
+	_id string
+	_rev string
+	Allergies     Allergies     `json:"allergies"`
+	FamilyHx      FamilyHx      `json:"familyHx"`
+	Immunization  Immunization  `json:"immunization"`
+	Medications   Medications   `json:"medications"`
+	PastMedicalHx PastMedicalHx `json:"pastMedicalHx"`
+}
+
+
 // ===================================================================================
 // Main
 // ===================================================================================
@@ -143,6 +160,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.RegisterProvider(stub, args)
 	} else if function == "GetProviderById" {
 		return t.GetProviderById(stub, args)
+	}else if function == "UpdateProviderAccess" {
+		return t.UpdateProviderAccess(stub, args)
 	}
 
 	fmt.Println("invoke did not find func: " + function) //error
@@ -204,12 +223,28 @@ func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args
 	patientJSONasBytes, err := json.Marshal(patient)
 
 	//==== Create patientMedications object and marshal to JSON ====
+	providerId, err := t.getAttribute(stub, "id")
+	if err != nil {
+		return shim.Error("Fails to get role " +err.Error())
+	}
+
+    providerAsByte, err := stub.GetState(providerId)
+	if err != nil {
+		return shim.Error("Fails to get provider: " + err.Error())
+	}
+
+	var provider Provider
+	err =  json.Unmarshal(providerAsByte, &provider)
+
+	if err != nil {
+		return shim.Error("Fails to unmarshal provider " +err.Error())
+	}
+
 	var patientdetails PatientDetails
 	patientdetails.Medications.ObjectType = "Medications"
 	patientdetails.Medications.Patient = *patient
 	var defaultConsent Consent
-	provider := &Provider{"Provider", "provider001", "mtbc", "mtbc", "faisal", "faisal", "faisal"}
-	defaultConsent.Provider = *provider
+	defaultConsent.Provider = provider
 	defaultConsent.StartTime = time.Now().Format("01-02-2006")
 	defaultConsent.EndTime = time.Now().Format("01-02-2006")
 	patientdetails.Medications.ProviderConsent = []Consent{}
@@ -386,7 +421,7 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 	}
 
 
-	role, err := t.getRole(stub)
+	role, err := t.getAttribute(stub, "role")
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -394,17 +429,44 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 	fmt.Println("=======Role==============")
 	fmt.Println(role)
 
-	ssn := strings.ToLower(args[0])
+	if strings.HasPrefix(role, "Patient") {
+		ssn := strings.ToLower(args[0])
 
-	queryString := fmt.Sprintf("{\"selector\":{\"patientssn\":\"%s\"}}", ssn)
+		queryString := fmt.Sprintf("{\"selector\":{\"patientssn\":\"%s\"}}", ssn)
 
-	// queryString := fmt.Sprintf("{\"selector\":{\"ObjectType\":\"Patient\",\"_id\":\"%s\"}}", id)
+		queryResults, err := getQueryResultForQueryString(stub, queryString)
+		if err != nil {
+			return shim.Error(err.Error())
+		}
 
-	queryResults, err := getQueryResultForQueryString(stub, queryString)
-	if err != nil {
-		return shim.Error(err.Error())
+		var tempArray []PatientUnmarshal
+		err =  json.Unmarshal(queryResults, &tempArray)
+		if err != nil{
+			return shim.Error(err.Error())
+		}
+
+		var key string
+		for _,patient := range tempArray {
+
+			key  = patient.Key
+
+		}
+
+		if ( strings.Contains(role ,key )){
+		
+			patientDetailsBytes, err := stub.GetPrivateData("patientDetails", key)
+			if err != nil {
+				return shim.Error("Patient not found "+ key + "role "+ role + "patient details " +string (patientDetailsBytes))
+			}
+			return shim.Success(patientDetailsBytes)
+		}else{
+			return shim.Error("unAuthorized role: "+role + "key: "+key)
+		}
+		
+	}else {
+		// When other
+		return shim.Error("Only patients, doctors and pharmacies can access medical details")
 	}
-	return shim.Success(queryResults)
 }
 
 func (t *SimpleChaincode) GetProviderById(stub shim.ChaincodeStubInterface, args []string) pb.Response {
@@ -454,32 +516,89 @@ func (t *SimpleChaincode) GetPatientByInformation(stub shim.ChaincodeStubInterfa
 	return shim.Success(queryResults)
 }
 
-func (s *SimpleChaincode) getRole(stub shim.ChaincodeStubInterface) (string, error) {
+func (t *SimpleChaincode) UpdateProviderAccess(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
-	 str := "ID: " 
-	id, err := cid.GetID(stub)
-	if err != nil {
-		fmt.Println("Error - cide.GetID()")
-	}
-	str = str + id;
-
-	mspid, err := cid.GetMSPID(stub)
-	if err != nil {
-		fmt.Println("Error - cide.GetMSPID()")
+	if len(args) < 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 
-	str = str  + "MSPID " + mspid
- 
 
-	role, ok, err := cid.GetAttributeValue(stub, "role")
+	logger := logging.NewLogger("log")
+
+	logger.Debugf("log is debugging: %s", args[0])
+
+	var patientDetails PatientDetailsUnmarshal
+	var val []byte = []byte("`" + args[0] + "`")
+	
+	s, err1 := strconv.Unquote(string(val))
+	
+
+	if err1 != nil{
+		return shim.Error("Error in unquote -->\n" +s+"-->\n"+ args[0] +err1.Error())
+	}
+
+	err := json.Unmarshal([]byte(s), &patientDetails)
+	
+	
+	if err != nil{
+		return shim.Error("Error in unmarshal input json -->\n" +s+"-->\n"+ args[0] +err.Error())
+	}
+
+	patientId, err := t.getAttribute(stub, "id")
+	if err != nil {
+		return shim.Error("Fail to get Attribute from private DB " + err.Error())
+	} 
+
+	patientDetailsAsBytes, err := stub.GetPrivateData("patientDetails", "123")
+
+
+	if err != nil {
+		return shim.Error("Fail to get patint from private DB " +patientDetails._id + err.Error())
+	}
+	
+	
+
+	var patientDetailsDB PatientDetails
+
+	err = json.Unmarshal(patientDetailsAsBytes, &patientDetailsDB) //unmarshal it aka JSON.parse()
+	if err != nil {
+		return shim.Error("ID"+patientDetails._id +err.Error())
+	}
+
+	patientDetailsDB.Allergies.ProviderConsent =  append( patientDetailsDB.Allergies.ProviderConsent , patientDetails.Allergies.ProviderConsent[0])
+	patientDetailsDB.Immunization.ProviderConsent =  append( patientDetailsDB.Immunization.ProviderConsent , patientDetails.Immunization.ProviderConsent[0])
+	patientDetailsDB.Medications.ProviderConsent =  append( patientDetailsDB.Medications.ProviderConsent , patientDetails.Medications.ProviderConsent[0])
+	patientDetailsDB.PastMedicalHx.ProviderConsent =  append( patientDetailsDB.PastMedicalHx.ProviderConsent , patientDetails.PastMedicalHx.ProviderConsent[0])
+	
+	PatientDetailsJSONasBytes, err := json.Marshal(&patientDetailsDB)
+
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	// === Save patientDetails to state ===
+	err = stub.PutPrivateData("patientDetails", patientId, PatientDetailsJSONasBytes)
+	if err != nil {
+		return shim.Error( "Error in put private data in one org" +err.Error())
+	}
+
+	err = stub.PutPrivateData("patientDetailsIn2Orgs", patientId, PatientDetailsJSONasBytes)
+	if err != nil {
+		return shim.Error("Error in put private data in two org "+err.Error())
+	}
+
+	return shim.Success([]byte("Success"))
+}
+
+func (s *SimpleChaincode) getAttribute(stub shim.ChaincodeStubInterface, key string) (string, error) {
+
+
+	role, ok, err := cid.GetAttributeValue(stub, key)
 
 	if err != nil {
 		return "", err
 	}
 
-	str = str  + "role " + role
-
-	return "", errors.New("MSPID: "+str+" ")
 
 	if !ok {
 		return "", errors.New("role attribute is missing")
@@ -487,6 +606,8 @@ func (s *SimpleChaincode) getRole(stub shim.ChaincodeStubInterface) (string, err
 
 	return role, nil
 }
+
+
 
 // ===============================================
 // readMarble - read a marble from chaincode state
