@@ -577,10 +577,10 @@ func (t *SimpleChaincode) UpdateProviderAccess(stub shim.ChaincodeStubInterface,
 	}
 
 	// === Save patientDetails to state ===
-	err = stub.PutPrivateData("patientDetails", patientId, PatientDetailsJSONasBytes)
-	if err != nil {
-		return shim.Error( "Error in put private data in one org" +err.Error())
-	}
+	// err = stub.PutPrivateData("patientDetails", patientId, PatientDetailsJSONasBytes)
+	// if err != nil {
+	// 	return shim.Error( "Error in put private data in one org" +err.Error())
+	// }
 
 	err = stub.PutPrivateData("patientDetailsIn2Orgs", patientId, PatientDetailsJSONasBytes)
 	if err != nil {
