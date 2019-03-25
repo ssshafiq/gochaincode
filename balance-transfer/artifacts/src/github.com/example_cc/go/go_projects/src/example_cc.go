@@ -407,6 +407,11 @@ func (t *SimpleChaincode) RegisterProvider(stub shim.ChaincodeStubInterface, arg
 	return shim.Success(nil)
 }
 
+func inTimeSpan(start, end, check time.Time) bool {
+	return check.After(start) && check.Before(end)
+}
+
+
 // ==============================================
 // Search Patient using its SSN
 // ==============================================
@@ -422,14 +427,52 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 
 
 	role, err := t.getAttribute(stub, "role")
+
+	userId, err := t.getAttribute(stub, "id")
+
 	if err != nil {
 		return shim.Error(err.Error())
 	}
+
+	ssn := strings.ToLower(args[0])
+
+		queryString := fmt.Sprintf("{\"selector\":{\"patientssn\":\"%s\"}}", ssn)
+
+		queryResults, err := getQueryResultForQueryString(stub, queryString)
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+
+		var tempArray []PatientUnmarshal
+		err =  json.Unmarshal(queryResults, &tempArray)
+		if err != nil{
+			return shim.Error(err.Error())
+		}
+
+		var key string
+		for _,patient := range tempArray {
+
+			key  = patient.Key
+
+		}
 
 	fmt.Println("=======Role==============")
 	fmt.Println(role)
 
 	if strings.HasPrefix(role, "Patient") {
+	
+		if ( strings.Contains(role ,key )){
+		
+			patientDetailsBytes, err := stub.GetPrivateData("patientDetails", key)
+			if err != nil {
+				return shim.Error("Patient not found "+ key + "role "+ role + "patient details " +string (patientDetailsBytes))
+			}
+			return shim.Success(patientDetailsBytes)
+		}else{
+			return shim.Error("unAuthorized role: "+role + "key: "+key)
+		}
+		
+	}else if strings.HasPrefix(role, "Provider") {
 		ssn := strings.ToLower(args[0])
 
 		queryString := fmt.Sprintf("{\"selector\":{\"patientssn\":\"%s\"}}", ssn)
@@ -454,12 +497,44 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 
 		if ( strings.Contains(role ,key )){
 		
-			patientDetailsBytes, err := stub.GetPrivateData("patientDetails", key)
+			patientDetailsBytes, err := stub.GetPrivateData("patientDetailsIn2Orgs", key)
 			if err != nil {
 				return shim.Error("Patient not found "+ key + "role "+ role + "patient details " +string (patientDetailsBytes))
 			}
+
+			var patientDetailsDB PatientDetails
+
+			err = json.Unmarshal(patientDetailsBytes, &patientDetailsDB) //unmarshal it aka JSON.parse()
+			if err != nil {
+				return shim.Error(err.Error())
+			}
+
+			
+			current, _:= time.Parse("01-02-2006", time.Now().Format("01-02-2006"))
+			i := 0
+			for _,consents := range patientDetailsDB.Medications.ProviderConsent {
+
+
+				if strings.Contains(consents.Provider.ProviderId ,userId ) {
+
+				start, _:= time.Parse("01-02-2006","01-02-2006")
+
+				end, _:= time.Parse("01-02-2006", consents.EndTime)
+
+				if !inTimeSpan(start, end, current) {
+
+					patientDetailsDB.Medications.ProviderConsent =	append(patientDetailsDB.Medications.ProviderConsent[:i], patientDetailsDB.Medications.ProviderConsent[i+1:]...)
+					
+				}
+		
+			
+				}
+			}
+
+			
+				
 			return shim.Success(patientDetailsBytes)
-		}else{
+		}else {
 			return shim.Error("unAuthorized role: "+role + "key: "+key)
 		}
 		
