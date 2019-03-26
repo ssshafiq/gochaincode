@@ -246,7 +246,7 @@ func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args
 	var defaultConsent Consent
 	defaultConsent.Provider = provider
 	defaultConsent.StartTime = time.Now().Format("01-02-2006")
-	defaultConsent.EndTime = time.Now().Format("01-02-2006")
+	defaultConsent.EndTime = time.Now().AddDate(1, 0, 0).Format("01-02-2006")
 	patientdetails.Medications.ProviderConsent = []Consent{}
 	patientdetails.Medications.ProviderConsent = append(patientdetails.Medications.ProviderConsent, defaultConsent)
 
@@ -456,6 +456,7 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 
 		}
 
+
 	fmt.Println("=======Role==============")
 	fmt.Println(role)
 
@@ -473,29 +474,7 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 		}
 		
 	}else if strings.HasPrefix(role, "Provider") {
-		ssn := strings.ToLower(args[0])
-
-		queryString := fmt.Sprintf("{\"selector\":{\"patientssn\":\"%s\"}}", ssn)
-
-		queryResults, err := getQueryResultForQueryString(stub, queryString)
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-
-		var tempArray []PatientUnmarshal
-		err =  json.Unmarshal(queryResults, &tempArray)
-		if err != nil{
-			return shim.Error(err.Error())
-		}
-
-		var key string
-		for _,patient := range tempArray {
-
-			key  = patient.Key
-
-		}
-
-		if ( strings.Contains(role ,key )){
+	
 		
 			patientDetailsBytes, err := stub.GetPrivateData("patientDetailsIn2Orgs", key)
 			if err != nil {
@@ -509,39 +488,190 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 				return shim.Error(err.Error())
 			}
 
-			
 			current, _:= time.Parse("01-02-2006", time.Now().Format("01-02-2006"))
-			i := 0
-			for _,consents := range patientDetailsDB.Medications.ProviderConsent {
+			patientDetailsDB = checkMedicationConsent(patientDetailsDB,userId, current)
+			patientDetailsDB = checkAllergiesConsent(patientDetailsDB,userId, current)
+			patientDetailsDB = checkImmunizationConsent(patientDetailsDB,userId, current)
+			patientDetailsDB = checkPastMedicalHxConsent(patientDetailsDB,userId, current)
+			patientDetailsDB = checkFamilyHxConsent(patientDetailsDB,userId, current)
 
+			patientDetailsIn2OrgsBytes, err := json.Marshal(&patientDetailsDB)
 
-				if strings.Contains(consents.Provider.ProviderId ,userId ) {
-
-				start, _:= time.Parse("01-02-2006","01-02-2006")
-
-				end, _:= time.Parse("01-02-2006", consents.EndTime)
-
-				if !inTimeSpan(start, end, current) {
-
-					patientDetailsDB.Medications.ProviderConsent =	append(patientDetailsDB.Medications.ProviderConsent[:i], patientDetailsDB.Medications.ProviderConsent[i+1:]...)
-					
-				}
-		
-			
-				}
+			if err != nil {
+				return shim.Error(err.Error())
 			}
-
-			
-				
-			return shim.Success(patientDetailsBytes)
-		}else {
-			return shim.Error("unAuthorized role: "+role + "key: "+key)
-		}
+		
+			return shim.Success(patientDetailsIn2OrgsBytes)
+		
 		
 	}else {
 		// When other
 		return shim.Error("Only patients, doctors and pharmacies can access medical details")
 	}
+}
+
+func checkMedicationConsent (patientDetails PatientDetails, userId string,  current time.Time) PatientDetails {
+
+	found := false
+	for _,consents := range patientDetails.Medications.ProviderConsent {
+
+		
+		if strings.Compare(consents.Provider.ProviderId, userId) == 0 {
+
+		start, _:= time.Parse("01-02-2006","01-02-2006")
+
+		end, _:= time.Parse("01-02-2006", consents.EndTime)
+
+		if !inTimeSpan(start, end, current) {
+			
+			patientDetails.Medications = Medications{}
+			 
+			
+		}else{
+			found = true
+		}
+
+	
+		}
+	}
+
+	if found == false {
+		patientDetails.Medications = Medications{}
+	}
+
+	return patientDetails
+
+}
+
+func checkAllergiesConsent (patientDetails PatientDetails, userId string,  current time.Time) PatientDetails {
+
+	found := false
+	for _,consents := range patientDetails.Allergies.ProviderConsent {
+
+		
+		if strings.Compare(consents.Provider.ProviderId, userId) == 0 {
+
+		start, _:= time.Parse("01-02-2006","01-02-2006")
+
+		end, _:= time.Parse("01-02-2006", consents.EndTime)
+
+		
+		if !inTimeSpan(start, end, current) {
+			
+			patientDetails.Allergies =	Allergies{}
+			
+		}else{
+			found = true
+		}
+
+	
+		}
+	}
+
+	if found == false {
+		patientDetails.Allergies =	Allergies{}
+	}
+
+	return patientDetails
+
+}
+
+func checkImmunizationConsent (patientDetails PatientDetails, userId string,  current time.Time) PatientDetails {
+
+	found := false
+	for _,consents := range patientDetails.Immunization.ProviderConsent {
+
+		
+		if strings.Compare(consents.Provider.ProviderId, userId) == 0 {
+
+		start, _:= time.Parse("01-02-2006","01-02-2006")
+
+		end, _:= time.Parse("01-02-2006", consents.EndTime)
+
+		if !inTimeSpan(start, end, current) {
+			
+			patientDetails.Immunization =	Immunization{}
+			
+			
+		}else{
+			found = true
+		}
+
+	
+		}
+	}
+
+	if found == false {
+		patientDetails.Immunization =	Immunization{}
+	}
+
+	return patientDetails
+
+}
+
+func checkPastMedicalHxConsent (patientDetails PatientDetails, userId string,  current time.Time) PatientDetails {
+
+	found := false
+	for _,consents := range patientDetails.PastMedicalHx.ProviderConsent {
+
+		
+		if strings.Compare(consents.Provider.ProviderId, userId) == 0 {
+
+		start, _:= time.Parse("01-02-2006","01-02-2006")
+
+		end, _:= time.Parse("01-02-2006", consents.EndTime)
+
+		if !inTimeSpan(start, end, current) {
+			
+			patientDetails.PastMedicalHx =	PastMedicalHx{}
+		
+			
+		}else{
+			found = true
+		}
+
+	
+		}
+	}
+
+	if found == false {
+		patientDetails.PastMedicalHx =	PastMedicalHx{}
+	}
+
+	return patientDetails
+
+}
+
+func checkFamilyHxConsent (patientDetails PatientDetails, userId string,  current time.Time) PatientDetails {
+
+	found := false
+	for _,consents := range patientDetails.FamilyHx.ProviderConsent {
+
+		
+		if strings.Compare(consents.Provider.ProviderId, userId) == 0 {
+
+		start, _:= time.Parse("01-02-2006","01-02-2006")
+
+		end, _:= time.Parse("01-02-2006", consents.EndTime)
+
+		if !inTimeSpan(start, end, current) {
+			
+			patientDetails.FamilyHx =	FamilyHx{}
+			
+		}else{
+			found = true
+		}
+
+	
+		}
+	}
+
+	if found == false {
+		patientDetails.FamilyHx =	FamilyHx{}
+	}
+
+	return patientDetails
+
 }
 
 func (t *SimpleChaincode) GetProviderById(stub shim.ChaincodeStubInterface, args []string) pb.Response {
@@ -598,6 +728,8 @@ func (t *SimpleChaincode) UpdateProviderAccess(stub shim.ChaincodeStubInterface,
 	}
 
 
+	
+
 	logger := logging.NewLogger("log")
 
 	logger.Debugf("log is debugging: %s", args[0])
@@ -624,7 +756,7 @@ func (t *SimpleChaincode) UpdateProviderAccess(stub shim.ChaincodeStubInterface,
 		return shim.Error("Fail to get Attribute from private DB " + err.Error())
 	} 
 
-	patientDetailsAsBytes, err := stub.GetPrivateData("patientDetails", "123")
+	patientDetailsAsBytes, err := stub.GetPrivateData("patientDetails", patientId)
 
 
 	if err != nil {
@@ -644,6 +776,7 @@ func (t *SimpleChaincode) UpdateProviderAccess(stub shim.ChaincodeStubInterface,
 	patientDetailsDB.Immunization.ProviderConsent =  append( patientDetailsDB.Immunization.ProviderConsent , patientDetails.Immunization.ProviderConsent[0])
 	patientDetailsDB.Medications.ProviderConsent =  append( patientDetailsDB.Medications.ProviderConsent , patientDetails.Medications.ProviderConsent[0])
 	patientDetailsDB.PastMedicalHx.ProviderConsent =  append( patientDetailsDB.PastMedicalHx.ProviderConsent , patientDetails.PastMedicalHx.ProviderConsent[0])
+	patientDetailsDB.FamilyHx.ProviderConsent =  append( patientDetailsDB.FamilyHx.ProviderConsent , patientDetails.FamilyHx.ProviderConsent[0])
 	
 	PatientDetailsJSONasBytes, err := json.Marshal(&patientDetailsDB)
 

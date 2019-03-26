@@ -57,7 +57,7 @@ echo
 ORG1_TOKEN=$(curl -s -X POST \
   http://localhost:4000/users \
   -H "content-type: application/x-www-form-urlencoded" \
-  -d 'username=Jim&orgName=Org1&role=Provider&id=1234')
+  -d 'username=Jim&orgName=Org1&role=Patient&id=12345')
 echo $ORG1_TOKEN
 ORG1_TOKEN=$(echo $ORG1_TOKEN | jq ".token" | sed "s/\"//g")
 echo
@@ -71,10 +71,12 @@ ORG2_TOKEN=$(curl -s -X POST \
   -H "content-type: application/x-www-form-urlencoded" \
   -d 'username=Barry&orgName=Org2&role=Provider&id=1234')
 echo $ORG2_TOKEN
+
 ORG2_TOKEN=$(echo $ORG2_TOKEN | jq ".token" | sed "s/\"//g")
 echo
 echo $ORG2_TOKEN >org2token.txt
 echo "ORG2 token is $ORG2_TOKEN"
+
 echo
 echo
 echo "POST request Create channel  ..."
