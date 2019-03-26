@@ -74,7 +74,7 @@ case $option in
 echo
 curl -s -X POST \
   http://localhost:4000/channels/mychannel/chaincodes/$cc \
-  -H "authorization: Bearer $ORG1_TOKEN" \
+  -H "authorization: Bearer $ORG2_TOKEN" \
   -H "content-type: application/json" \
   -d '{
 	"peers": ["peer0.org1.example.com","peer0.org2.example.com"],

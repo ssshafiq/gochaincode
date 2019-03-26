@@ -63,7 +63,7 @@ async function getClientForOrg (userorg, username) {
 	return client;
 }
 
-var getRegisteredUser = async function(username, userOrg, isJson, role, id) {
+var getRegisteredUser = async function(username, userOrg, isJson, mspRole, role, id) {
 	try {
 		var client = await getClientForOrg(userOrg);
 		logger.debug('Successfully initialized the credential stores');
@@ -81,8 +81,8 @@ var getRegisteredUser = async function(username, userOrg, isJson, role, id) {
 			let secret = await caClient.register({
 				enrollmentID: username,
 				affiliation: userOrg.toLowerCase() + '.department1',
-				role: "client",
-				attrs: [{ name: "role", value: role, ecert: true },{ name: "id", value: id, ecert: true }]
+				role: mspRole,
+				attrs: [{ name: "userrole", value: role,  ecert: true },{ name: "mspRole", value: mspRole,  ecert: true },{ name: "id", value: id, ecert: true }]
 			}, adminUserObj);
 
 

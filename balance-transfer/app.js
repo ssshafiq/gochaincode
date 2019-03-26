@@ -111,6 +111,7 @@ app.post('/users', async function(req, res) {
 	var username = req.body.username;
 	var orgName = req.body.orgName;
 	var role = req.body.role;
+	var mspRole = req.body.mspRole;
 	var id = req.body.id;
 	logger.debug('End point : /users');
 	logger.debug('User name : ' + username);
@@ -129,8 +130,12 @@ app.post('/users', async function(req, res) {
 		res.json(getErrorMessage('\'role\''));
 		return;
 	}
+	if (!mspRole) {
+		res.json(getErrorMessage('\'mspRole\''));
+		return;
+	}
 	if (!id) {
-		res.json(getErrorMessage('\'role\''));
+		res.json(getErrorMessage('\'id\''));
 		return;
 	}
 	var token = jwt.sign({
@@ -138,7 +143,8 @@ app.post('/users', async function(req, res) {
 		username: username,
 		orgName: orgName
 	}, app.get('secret'));
-	let response = await helper.getRegisteredUser(username, orgName, true,role,id);
+
+	let response = await helper.getRegisteredUser(username, orgName, true,mspRole,role,id);
 	logger.debug('-- returned from registering the username %s for organization %s',username,orgName);
 	if (response && typeof response !== 'string') {
 		logger.debug('Successfully registered the username %s for organization %s',username,orgName);
