@@ -407,7 +407,6 @@ func inTimeSpan(start, end, check time.Time) bool {
 	return check.After(start) && check.Before(end)
 }
 
-
 // ==============================================
 // Search Patient using its SSN
 // ==============================================
@@ -431,43 +430,43 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 
 	ssn := strings.ToLower(args[0])
 
-		queryString := fmt.Sprintf("{\"selector\":{\"patientssn\":\"%s\"}}", ssn)
+	queryString := fmt.Sprintf("{\"selector\":{\"patientssn\":\"%s\"}}", ssn)
 
-		queryResults, err := getQueryResultForQueryString(stub, queryString)
-		if err != nil {
-			return shim.Error(err.Error())
-		}
+	queryResults, err := getQueryResultForQueryString(stub, queryString)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
 
-		var tempArray []PatientUnmarshal
-		err =  json.Unmarshal(queryResults, &tempArray)
-		if err != nil{
-			return shim.Error(err.Error())
-		}
+	var tempArray []PatientUnmarshal
+	err = json.Unmarshal(queryResults, &tempArray)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
 
-		var key string
-		for _,patient := range tempArray {
+	var key string
+	for _, patient := range tempArray {
 
-			key  = patient.Key
+		key = patient.Key
 
-		}
+	}
 
 	fmt.Println("=======Role==============")
 	fmt.Println(role)
 
 	if strings.HasPrefix(role, "Patient") {
-	
-		if ( strings.Contains(role ,key )){
-		
+
+		if strings.Contains(role, key) {
+
 			patientDetailsBytes, err := stub.GetPrivateData("patientDetails", key)
 			if err != nil {
-				return shim.Error("Patient not found "+ key + "role "+ role + "patient details " +string (patientDetailsBytes))
+				return shim.Error("Patient not found " + key + "role " + role + "patient details " + string(patientDetailsBytes))
 			}
 			return shim.Success(patientDetailsBytes)
-		}else{
-			return shim.Error("unAuthorized role: "+role + "key: "+key)
+		} else {
+			return shim.Error("unAuthorized role: " + role + "key: " + key)
 		}
-		
-	}else if strings.HasPrefix(role, "Provider") {
+
+	} else if strings.HasPrefix(role, "Provider") {
 		ssn := strings.ToLower(args[0])
 
 		queryString := fmt.Sprintf("{\"selector\":{\"patientssn\":\"%s\"}}", ssn)
@@ -490,15 +489,9 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 
 		}
 
-<<<<<<< HEAD
 		if strings.Contains(role, key) {
 
 			patientDetailsBytes, err := stub.GetPrivateData("patientDetails", key)
-=======
-		if ( strings.Contains(role ,key )){
-		
-			patientDetailsBytes, err := stub.GetPrivateData("patientDetailsIn2Orgs", key)
->>>>>>> f2317c664db4320a7dace6248e9870bf8e8f827a
 			if err != nil {
 				return shim.Error("Patient not found " + key + "role " + role + "patient details " + string(patientDetailsBytes))
 			}
@@ -510,38 +503,28 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 				return shim.Error(err.Error())
 			}
 
-			
-			current, _:= time.Parse("01-02-2006", time.Now().Format("01-02-2006"))
+			current, _ := time.Parse("01-02-2006", time.Now().Format("01-02-2006"))
 			i := 0
-			for _,consents := range patientDetailsDB.Medications.ProviderConsent {
+			for _, consents := range patientDetailsDB.Medications.ProviderConsent {
 
+				if strings.Contains(consents.Provider.ProviderId, userId) {
 
-				if strings.Contains(consents.Provider.ProviderId ,userId ) {
+					start, _ := time.Parse("01-02-2006", "01-02-2006")
 
-				start, _:= time.Parse("01-02-2006","01-02-2006")
+					end, _ := time.Parse("01-02-2006", consents.EndTime)
 
-				end, _:= time.Parse("01-02-2006", consents.EndTime)
+					if !inTimeSpan(start, end, current) {
 
-				if !inTimeSpan(start, end, current) {
+						patientDetailsDB.Medications.ProviderConsent = append(patientDetailsDB.Medications.ProviderConsent[:i], patientDetailsDB.Medications.ProviderConsent[i+1:]...)
 
-					patientDetailsDB.Medications.ProviderConsent =	append(patientDetailsDB.Medications.ProviderConsent[:i], patientDetailsDB.Medications.ProviderConsent[i+1:]...)
-					
-				}
-		
-			
+					}
+
 				}
 			}
 
-			
-				
 			return shim.Success(patientDetailsBytes)
-<<<<<<< HEAD
 		} else {
 			return shim.Error("unAuthorized role: " + role + "key: " + key)
-=======
-		}else {
-			return shim.Error("unAuthorized role: "+role + "key: "+key)
->>>>>>> f2317c664db4320a7dace6248e9870bf8e8f827a
 		}
 
 	} else {
