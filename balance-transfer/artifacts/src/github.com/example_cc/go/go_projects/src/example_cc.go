@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	cid "github.com/hyperledger/fabric/core/chaincode/lib/cid"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -91,20 +90,22 @@ type FamilyHx struct {
 	ProviderConsent []Consent `json:"providerconsent"`
 }
 
-type PatientUnmarshal struct {
-	Key    string
+type PatientUnmarshal struct 
+{
+	Key string
 	Record Patient `json:"Patient"`
 }
 
 type PatientDetailsUnmarshal struct {
-	_id           string
-	_rev          string
+	_id string
+	_rev string
 	Allergies     Allergies     `json:"allergies"`
 	FamilyHx      FamilyHx      `json:"familyHx"`
 	Immunization  Immunization  `json:"immunization"`
 	Medications   Medications   `json:"medications"`
 	PastMedicalHx PastMedicalHx `json:"pastMedicalHx"`
 }
+
 
 // ===================================================================================
 // Main
@@ -159,7 +160,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.RegisterProvider(stub, args)
 	} else if function == "GetProviderById" {
 		return t.GetProviderById(stub, args)
-	} else if function == "UpdateProviderAccess" {
+	}else if function == "UpdateProviderAccess" {
 		return t.UpdateProviderAccess(stub, args)
 	}
 
@@ -168,7 +169,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 }
 
 // ============================================================
+//
 // RegisterPatient - create a new Patient, store into chaincode state
+//
 // ============================================================
 func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var err error
@@ -200,21 +203,41 @@ func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args
 		return shim.Error("4th argument must be a non-empty string")
 	}
 
-	mspRole, err := t.getAttribute(stub, "mspRole")
+	patientId := strings.ToLower(args[0])
+	patientSSN := strings.ToLower(args[1])
+	patientUrl := strings.ToLower(args[2])
+	firstname := strings.ToLower(args[3])
+	lastname := strings.ToLower(args[4])
+	DOB := strings.ToLower(args[5])
+
+	// ==== Check if marble already exists ====
+	/*patientData, err := stub.GetState(patientId)
 	if err != nil {
-		return shim.Error("Fails to get mspRole " + err.Error())
+		return shim.Error("Failed to get marble: " + err.Error())
+	} else if patientData != nil {
+		fmt.Println("This marble already exists: " + patientData)
+		return shim.Error("This marble already exists: " + patientData)
+	}*/
+
+	//==== Create Patient object and marshal to JSON ====
+	objectType := "Patient"
+	patient := &Patient{objectType, patientId, patientSSN, patientUrl, firstname, lastname, DOB}
+	patientJSONasBytes, err := json.Marshal(patient)
+
+	//==== Create patientMedications object and marshal to JSON ====
+	providerId, err := t.getAttribute(stub, "id")
+	if err != nil {
+		return shim.Error("Fails to get role " +err.Error())
 	}
 
-	if mspRole == "client" || mspRole == "admin" {
+    providerAsByte, err := stub.GetState(providerId)
+	if err != nil {
+		return shim.Error("Fails to get provider:" + err.Error())
+	}
 
-		patientId := strings.ToLower(args[0])
-		patientSSN := strings.ToLower(args[1])
-		patientUrl := strings.ToLower(args[2])
-		firstname := strings.ToLower(args[3])
-		lastname := strings.ToLower(args[4])
-		DOB := strings.ToLower(args[5])
+	var provider Provider
+	err =  json.Unmarshal(providerAsByte, &provider)
 
-<<<<<<< HEAD
 	if err != nil {
 		return shim.Error("Fails to unmarshal provider " +err.Error())
 	}
@@ -254,121 +277,52 @@ func (t *SimpleChaincode) RegisterPatient(stub shim.ChaincodeStubInterface, args
 	patientdetails.FamilyHx.ProviderConsent = append(patientdetails.FamilyHx.ProviderConsent, defaultConsent)
 
 	PatientDetailsJSONasBytes, err := json.Marshal(&patientdetails)
-=======
-		// ==== Check if marble already exists ====
-		/*patientData, err := stub.GetState(patientId)
-		if err != nil {
-			return shim.Error("Failed to get marble: " + err.Error())
-		} else if patientData != nil {
-			fmt.Println("This marble already exists: " + patientData)
-			return shim.Error("This marble already exists: " + patientData)
-		}*/
 
-		//==== Create Patient object and marshal to JSON ====
-		objectType := "Patient"
-		patient := &Patient{objectType, patientId, patientSSN, patientUrl, firstname, lastname, DOB}
-		patientJSONasBytes, err := json.Marshal(patient)
-
-		//==== Create patientMedications object and marshal to JSON ====
-		providerId, err := t.getAttribute(stub, "id")
-		if err != nil {
-			return shim.Error("Fails to get id " + err.Error())
-		}
->>>>>>> 03b59cb73600bb6f59519fdb29f89c81b55250ad
-
-		providerAsByte, err := stub.GetState(providerId)
-		if err != nil {
-			return shim.Error("Fails to get provider: " + err.Error())
-		}
-
-		var provider Provider
-		err = json.Unmarshal(providerAsByte, &provider)
-
-		if err != nil {
-			return shim.Error("Fails to unmarshal provider " + err.Error())
-		}
-
-		var patientdetails PatientDetails
-		patientdetails.Medications.ObjectType = "Medications"
-		patientdetails.Medications.Patient = *patient
-		var defaultConsent Consent
-		defaultConsent.Provider = provider
-		defaultConsent.StartTime = time.Now().Format("01-02-2006")
-		defaultConsent.EndTime = time.Now().Format("01-02-2006")
-		patientdetails.Medications.ProviderConsent = []Consent{}
-		patientdetails.Medications.ProviderConsent = append(patientdetails.Medications.ProviderConsent, defaultConsent)
-
-		//==== Create patientAllergies object and marshal to JSON ====
-		patientdetails.Allergies.ObjectType = "Allergies"
-		patientdetails.Allergies.Patient = *patient
-		patientdetails.Allergies.ProviderConsent = []Consent{}
-		patientdetails.Allergies.ProviderConsent = append(patientdetails.Allergies.ProviderConsent, defaultConsent)
-
-		//==== Create patientImmunizations object and marshal to JSON ====
-		patientdetails.Immunization.ObjectType = "Immunizations"
-		patientdetails.Immunization.Patient = *patient
-		patientdetails.Immunization.ProviderConsent = []Consent{}
-		patientdetails.Immunization.ProviderConsent = append(patientdetails.Immunization.ProviderConsent, defaultConsent)
-
-		//==== Create patientPastMedicalHx object and marshal to JSON ====
-		patientdetails.PastMedicalHx.ObjectType = "PastMedicalHx"
-		patientdetails.PastMedicalHx.Patient = *patient
-		patientdetails.PastMedicalHx.ProviderConsent = []Consent{}
-		patientdetails.PastMedicalHx.ProviderConsent = append(patientdetails.PastMedicalHx.ProviderConsent, defaultConsent)
-
-		//==== Create patientFamilyHx object and marshal to JSON ====
-		patientdetails.FamilyHx.ObjectType = "FamilyHx"
-		patientdetails.FamilyHx.Patient = *patient
-		patientdetails.FamilyHx.ProviderConsent = []Consent{}
-		patientdetails.FamilyHx.ProviderConsent = append(patientdetails.FamilyHx.ProviderConsent, defaultConsent)
-
-		PatientDetailsJSONasBytes, err := json.Marshal(&patientdetails)
-
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-
-		// === Save patientDetails to state ===
-		err = stub.PutPrivateData("patientDetails", patientId, PatientDetailsJSONasBytes)
-		//err = stub.PutState(patientId, PatientDetailsJSONasBytes)
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-
-		//=== Save Patient to state ===
-		err = stub.PutState(patientId, patientJSONasBytes)
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-
-		//  ==== Index the Patient to enable name-based range queries, e.g. return all Patients ====
-		//  An 'index' is a normal key/value entry in state.
-		//  The key is a composite key, with the elements that you want to range query on listed first.
-		//  In our case, the composite key is based on indexName~color~name.
-		//  This will enable very efficient state range queries based on composite keys matching indexName~color~*
-		indexName := "fname~lname"
-		fnameLnameIndexKey, err := stub.CreateCompositeKey(indexName, []string{patient.PatientFirstname, patient.PatientLastname})
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-		//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
-		//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
-		value := []byte{0x00}
-		stub.PutState(fnameLnameIndexKey, value)
-
-		// ==== Marble saved and indexed. Return success ====
-		//fmt.Println("- end register patient")
-		return shim.Success(nil)
+	if err != nil {
+		return shim.Error(err.Error())
 	}
-	return shim.Error("Unauthorized!")
 
+	// === Save patientDetails to state ===
+	err = stub.PutPrivateData("patientDetails", patientId, PatientDetailsJSONasBytes)
+	//err = stub.PutState(patientId, PatientDetailsJSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	//=== Save Patient to state ===
+	err = stub.PutState(patientId, patientJSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	//  ==== Index the Patient to enable name-based range queries, e.g. return all Patients ====
+	//  An 'index' is a normal key/value entry in state.
+	//  The key is a composite key, with the elements that you want to range query on listed first.
+	//  In our case, the composite key is based on indexName~color~name.
+	//  This will enable very efficient state range queries based on composite keys matching indexName~color~*
+	indexName := "fname~lname"
+	fnameLnameIndexKey, err := stub.CreateCompositeKey(indexName, []string{patient.PatientFirstname, patient.PatientLastname})
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
+	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
+	value := []byte{0x00}
+	stub.PutState(fnameLnameIndexKey, value)
+
+	// ==== Marble saved and indexed. Return success ====
+	//fmt.Println("- end register patient")
+	return shim.Success(nil)
 }
 
 // ============================================================
 // RegisterPatient - create a new Provider, store into chaincode state
 // ============================================================
 func (t *SimpleChaincode) RegisterProvider(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	var err error
 
+	//   0       1       2     3
+	// "asdf", "blue", "35", "bob"
 	if len(args) != 6 {
 		return shim.Error("Incorrect number of arguments. Expecting 6")
 	}
@@ -394,60 +348,71 @@ func (t *SimpleChaincode) RegisterProvider(stub shim.ChaincodeStubInterface, arg
 		return shim.Error("4th argument must be a non-empty string")
 	}
 
-	mspRole, err := t.getAttribute(stub, "mspRole")
+	providerId := strings.ToLower(args[0])
+	providerEHR := strings.ToLower(args[1])
+	providerEHRUrl := strings.ToLower(args[2])
+	firstname := strings.ToLower(args[3])
+	lastname := strings.ToLower(args[4])
+	speciality := strings.ToLower(args[5])
+
+	// ==== Check if marble already exists ====
+	/*patientData, err := stub.GetState(patientId)
 	if err != nil {
-		return shim.Error("Fails to get mspRole " + err.Error())
+		return shim.Error("Failed to get marble: " + err.Error())
+	} else if patientData != nil {
+		fmt.Println("This marble already exists: " + patientData)
+		return shim.Error("This marble already exists: " + patientData)
+	}*/
+
+	//==== Create Provider object and marshal to JSON ====
+	objectType := "Provider"
+	provider := &Provider{objectType, providerId, providerEHR, providerEHRUrl, firstname, lastname, speciality}
+	//fmt.Println(Provider.firstname)
+
+	providerJSONasBytes, err := json.Marshal(provider)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	//Alternatively, build the marble json string manually if you don't want to use struct marshalling
+	//marbleJSONasString := `{"docType":"Marble",  "name": "` + marbleName + `", "color": "` + color + `", "size": ` + strconv.Itoa(size) + `, "owner": "` + owner + `"}`
+	//marbleJSONasBytes := []byte(str)
+
+	//Alternatively, build the marble json string manually if you don't want to use struct marshalling
+	//patientJSONasString := `{"docType":"Patient",  "patientId": "` + patientId + `", "patientSSN": "` + patientSSN + `", "patientUrl": ` + patientUrl + `, "firstname": "` + firstname + `, "DOB": "` + DOB + `, "email": "` + email + `, "mobile": "` + mobile + `"}`
+	//patientJSONasBytes := []byte(patientJSONasString)
+
+	// === Save Provider to state ===
+
+	//err = stub.PutPrivateData("patientDetails", providerId, providerJSONasBytes)
+	err = stub.PutState(providerId, providerJSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
 	}
 
-	if mspRole == "admin" {
-		providerId := strings.ToLower(args[0])
-		providerEHR := strings.ToLower(args[1])
-		providerEHRUrl := strings.ToLower(args[2])
-		firstname := strings.ToLower(args[3])
-		lastname := strings.ToLower(args[4])
-		speciality := strings.ToLower(args[5])
-
-		//==== Create Provider object and marshal to JSON ====
-		objectType := "Provider"
-		provider := &Provider{objectType, providerId, providerEHR, providerEHRUrl, firstname, lastname, speciality}
-
-		providerJSONasBytes, err := json.Marshal(provider)
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-
-		//Registering user to CouchDB
-		err = stub.PutState(providerId, providerJSONasBytes)
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-
-		//  ==== Index the Provider to enable name-based range queries, e.g. return all Patients ====
-		//  An 'index' is a normal key/value entry in state.
-		//  The key is a composite key, with the elements that you want to range query on listed first.
-		//  In our case, the composite key is based on indexName~color~name.
-		//  This will enable very efficient state range queries based on composite keys matching indexName~color~*
-		indexName := "fname~lname"
-		fnameLnameIndexKey, err := stub.CreateCompositeKey(indexName, []string{provider.ProviderFirstname, provider.ProviderLastname})
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-		//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
-		//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
-		value := []byte{0x00}
-		stub.PutState(fnameLnameIndexKey, value)
-
-		// ==== Marble saved and indexed. Return success ====
-		//fmt.Println("- end register patient")
-		return shim.Success(nil)
+	//  ==== Index the Provider to enable name-based range queries, e.g. return all Patients ====
+	//  An 'index' is a normal key/value entry in state.
+	//  The key is a composite key, with the elements that you want to range query on listed first.
+	//  In our case, the composite key is based on indexName~color~name.
+	//  This will enable very efficient state range queries based on composite keys matching indexName~color~*
+	indexName := "fname~lname"
+	fnameLnameIndexKey, err := stub.CreateCompositeKey(indexName, []string{provider.ProviderFirstname, provider.ProviderLastname})
+	if err != nil {
+		return shim.Error(err.Error())
 	}
-	return shim.Error("Unauthorized!")
+	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
+	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
+	value := []byte{0x00}
+	stub.PutState(fnameLnameIndexKey, value)
 
+	// ==== Marble saved and indexed. Return success ====
+	//fmt.Println("- end register patient")
+	return shim.Success(nil)
 }
 
 func inTimeSpan(start, end, check time.Time) bool {
 	return check.After(start) && check.Before(end)
 }
+
 
 // ==============================================
 // Search Patient using its SSN
@@ -455,12 +420,13 @@ func inTimeSpan(start, end, check time.Time) bool {
 func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
 	fmt.Println("In seachpatient by sssn")
-
+	
 	//   0
 	// "bob"
 	if len(args) < 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
+
 
 	role, err := t.getAttribute(stub, "role")
 
@@ -472,53 +438,6 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 
 	ssn := strings.ToLower(args[0])
 
-	queryString := fmt.Sprintf("{\"selector\":{\"patientssn\":\"%s\"}}", ssn)
-
-	queryResults, err := getQueryResultForQueryString(stub, queryString)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	var tempArray []PatientUnmarshal
-	err = json.Unmarshal(queryResults, &tempArray)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	var key string
-	for _, patient := range tempArray {
-
-		key = patient.Key
-
-	}
-
-
-	fmt.Println("=======Role==============")
-	fmt.Println(role)
-
-	if strings.HasPrefix(role, "Patient") {
-
-		if strings.Contains(role, key) {
-
-			patientDetailsBytes, err := stub.GetPrivateData("patientDetails", key)
-			if err != nil {
-				return shim.Error("Patient not found " + key + "role " + role + "patient details " + string(patientDetailsBytes))
-			}
-			return shim.Success(patientDetailsBytes)
-		} else {
-			return shim.Error("unAuthorized role: " + role + "key: " + key)
-		}
-<<<<<<< HEAD
-		
-	}else if strings.HasPrefix(role, "Provider") {
-	
-		
-			patientDetailsBytes, err := stub.GetPrivateData("patientDetailsIn2Orgs", key)
-=======
-
-	} else if strings.HasPrefix(role, "Provider") {
-		ssn := strings.ToLower(args[0])
-
 		queryString := fmt.Sprintf("{\"selector\":{\"patientssn\":\"%s\"}}", ssn)
 
 		queryResults, err := getQueryResultForQueryString(stub, queryString)
@@ -527,24 +446,41 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 		}
 
 		var tempArray []PatientUnmarshal
-		err = json.Unmarshal(queryResults, &tempArray)
-		if err != nil {
+		err =  json.Unmarshal(queryResults, &tempArray)
+		if err != nil{
 			return shim.Error(err.Error())
 		}
 
 		var key string
-		for _, patient := range tempArray {
+		for _,patient := range tempArray {
 
-			key = patient.Key
+			key  = patient.Key
 
 		}
 
-		if strings.Contains(role, key) {
 
+	fmt.Println("=======Role==============")
+	fmt.Println(role)
+
+	if strings.HasPrefix(role, "Patient") {
+	
+		if ( strings.Contains(role ,key )){
+		
 			patientDetailsBytes, err := stub.GetPrivateData("patientDetails", key)
->>>>>>> 03b59cb73600bb6f59519fdb29f89c81b55250ad
 			if err != nil {
-				return shim.Error("Patient not found " + key + "role " + role + "patient details " + string(patientDetailsBytes))
+				return shim.Error("Patient not found "+ key + "role "+ role + "patient details " +string (patientDetailsBytes))
+			}
+			return shim.Success(patientDetailsBytes)
+		}else{
+			return shim.Error("unAuthorized role: "+role + "key: "+key)
+		}
+		
+	}else if strings.HasPrefix(role, "Provider") {
+	
+		
+			patientDetailsBytes, err := stub.GetPrivateData("patientDetailsIn2Orgs", key)
+			if err != nil {
+				return shim.Error("Patient not found "+ key + "role "+ role + "patient details " +string (patientDetailsBytes))
 			}
 
 			var patientDetailsDB PatientDetails
@@ -554,7 +490,6 @@ func (t *SimpleChaincode) GetPatientBySSN(stub shim.ChaincodeStubInterface, args
 				return shim.Error(err.Error())
 			}
 
-<<<<<<< HEAD
 			current, _:= time.Parse("01-02-2006", time.Now().Format("01-02-2006"))
 			patientDetailsDB = checkMedicationConsent(patientDetailsDB,userId, current)
 			patientDetailsDB = checkAllergiesConsent(patientDetailsDB,userId, current)
@@ -703,35 +638,6 @@ func checkPastMedicalHxConsent (patientDetails PatientDetails, userId string,  c
 
 	if found == false {
 		patientDetails.PastMedicalHx =	PastMedicalHx{}
-=======
-			current, _ := time.Parse("01-02-2006", time.Now().Format("01-02-2006"))
-			i := 0
-			for _, consents := range patientDetailsDB.Medications.ProviderConsent {
-
-				if strings.Contains(consents.Provider.ProviderId, userId) {
-
-					start, _ := time.Parse("01-02-2006", "01-02-2006")
-
-					end, _ := time.Parse("01-02-2006", consents.EndTime)
-
-					if !inTimeSpan(start, end, current) {
-
-						patientDetailsDB.Medications.ProviderConsent = append(patientDetailsDB.Medications.ProviderConsent[:i], patientDetailsDB.Medications.ProviderConsent[i+1:]...)
-
-					}
-
-				}
-			}
-
-			return shim.Success(patientDetailsBytes)
-		} else {
-			return shim.Error("unAuthorized role: " + role + "key: " + key)
-		}
-
-	} else {
-		// When other
-		return shim.Error("Only patients, doctors and pharmacies can access medical details")
->>>>>>> 03b59cb73600bb6f59519fdb29f89c81b55250ad
 	}
 
 	return patientDetails
@@ -823,63 +729,57 @@ func (t *SimpleChaincode) UpdateProviderAccess(stub shim.ChaincodeStubInterface,
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 
-<<<<<<< HEAD
 
 	
 
-=======
->>>>>>> 03b59cb73600bb6f59519fdb29f89c81b55250ad
 	logger := logging.NewLogger("log")
 
 	logger.Debugf("log is debugging: %s", args[0])
 
 	var patientDetails PatientDetailsUnmarshal
 	var val []byte = []byte("`" + args[0] + "`")
-
+	
 	s, err1 := strconv.Unquote(string(val))
+	
 
-	if err1 != nil {
-		return shim.Error("Error in unquote -->\n" + s + "-->\n" + args[0] + err1.Error())
+	if err1 != nil{
+		return shim.Error("Error in unquote -->\n" +s+"-->\n"+ args[0] +err1.Error())
 	}
 
 	err := json.Unmarshal([]byte(s), &patientDetails)
-
-	if err != nil {
-		return shim.Error("Error in unmarshal input json -->\n" + s + "-->\n" + args[0] + err.Error())
+	
+	
+	if err != nil{
+		return shim.Error("Error in unmarshal input json -->\n" +s+"-->\n"+ args[0] +err.Error())
 	}
 
 	patientId, err := t.getAttribute(stub, "id")
 	if err != nil {
 		return shim.Error("Fail to get Attribute from private DB " + err.Error())
-	}
+	} 
 
 	patientDetailsAsBytes, err := stub.GetPrivateData("patientDetails", patientId)
 
+
 	if err != nil {
-		return shim.Error("Fail to get patint from private DB " + patientDetails._id + err.Error())
+		return shim.Error("Fail to get patint from private DB " +patientDetails._id + err.Error())
 	}
+	
+	
 
 	var patientDetailsDB PatientDetails
 
 	err = json.Unmarshal(patientDetailsAsBytes, &patientDetailsDB) //unmarshal it aka JSON.parse()
 	if err != nil {
-		return shim.Error("ID" + patientDetails._id + err.Error())
+		return shim.Error("ID"+patientDetails._id +err.Error())
 	}
 
-<<<<<<< HEAD
 	patientDetailsDB.Allergies.ProviderConsent =  append( patientDetailsDB.Allergies.ProviderConsent , patientDetails.Allergies.ProviderConsent[0])
 	patientDetailsDB.Immunization.ProviderConsent =  append( patientDetailsDB.Immunization.ProviderConsent , patientDetails.Immunization.ProviderConsent[0])
 	patientDetailsDB.Medications.ProviderConsent =  append( patientDetailsDB.Medications.ProviderConsent , patientDetails.Medications.ProviderConsent[0])
 	patientDetailsDB.PastMedicalHx.ProviderConsent =  append( patientDetailsDB.PastMedicalHx.ProviderConsent , patientDetails.PastMedicalHx.ProviderConsent[0])
 	patientDetailsDB.FamilyHx.ProviderConsent =  append( patientDetailsDB.FamilyHx.ProviderConsent , patientDetails.FamilyHx.ProviderConsent[0])
 	
-=======
-	patientDetailsDB.Allergies.ProviderConsent = append(patientDetailsDB.Allergies.ProviderConsent, patientDetails.Allergies.ProviderConsent[0])
-	patientDetailsDB.Immunization.ProviderConsent = append(patientDetailsDB.Immunization.ProviderConsent, patientDetails.Immunization.ProviderConsent[0])
-	patientDetailsDB.Medications.ProviderConsent = append(patientDetailsDB.Medications.ProviderConsent, patientDetails.Medications.ProviderConsent[0])
-	patientDetailsDB.PastMedicalHx.ProviderConsent = append(patientDetailsDB.PastMedicalHx.ProviderConsent, patientDetails.PastMedicalHx.ProviderConsent[0])
-
->>>>>>> 03b59cb73600bb6f59519fdb29f89c81b55250ad
 	PatientDetailsJSONasBytes, err := json.Marshal(&patientDetailsDB)
 
 	if err != nil {
@@ -894,7 +794,7 @@ func (t *SimpleChaincode) UpdateProviderAccess(stub shim.ChaincodeStubInterface,
 
 	err = stub.PutPrivateData("patientDetailsIn2Orgs", patientId, PatientDetailsJSONasBytes)
 	if err != nil {
-		return shim.Error("Error in put private data in two org " + err.Error())
+		return shim.Error("Error in put private data in two org "+err.Error())
 	}
 
 	return shim.Success([]byte("Success"))
@@ -902,11 +802,13 @@ func (t *SimpleChaincode) UpdateProviderAccess(stub shim.ChaincodeStubInterface,
 
 func (s *SimpleChaincode) getAttribute(stub shim.ChaincodeStubInterface, key string) (string, error) {
 
+
 	role, ok, err := cid.GetAttributeValue(stub, key)
 
 	if err != nil {
 		return "", err
 	}
+
 
 	if !ok {
 		return "", errors.New("role attribute is missing")
@@ -914,6 +816,8 @@ func (s *SimpleChaincode) getAttribute(stub shim.ChaincodeStubInterface, key str
 
 	return role, nil
 }
+
+
 
 // ===============================================
 // readMarble - read a marble from chaincode state
