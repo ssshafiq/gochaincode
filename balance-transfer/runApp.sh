@@ -55,7 +55,7 @@ function installNodeModules() {
 }
 
 
-restartNetwork
+#restartNetwork
 
 installNodeModules
 

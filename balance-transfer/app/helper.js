@@ -35,13 +35,17 @@ async function getClientForOrg (userorg, username) {
 	// lets only load the network settings and save the client for later
 	let client = hfc.loadFromConfig(hfc.getConfigSetting('network'+config));
 
+	
 	// This will load a connection profile over the top of the current one one
 	// since the first one did not have a client section and the following one does
 	// nothing will actually be replaced.
 	// This will also set an admin identity because the organization defined in the
 	// client section has one defined
+
+	logger.debug('loadFromConfig var ', hfc.getConfigSetting(userorg+config));
 	client.loadFromConfig(hfc.getConfigSetting(userorg+config));
 
+	
 	// this will create both the state store and the crypto store based
 	// on the settings in the client section of the connection profile
 	await client.initCredentialStores();
@@ -80,7 +84,7 @@ var getRegisteredUser = async function(username, userOrg, isJson, mspRole, role,
 			let caClient = client.getCertificateAuthority();
 			let secret = await caClient.register({
 				enrollmentID: username,
-				affiliation: userOrg.toLowerCase() + '.department1',
+			//	affiliation: userOrg.toLowerCase() ,
 				role: mspRole,
 				attrs: [{ name: "userrole", value: role,  ecert: true },{ name: "mspRole", value: mspRole,  ecert: true },{ name: "id", value: id, ecert: true }]
 			}, adminUserObj);
@@ -101,12 +105,15 @@ var getRegisteredUser = async function(username, userOrg, isJson, mspRole, role,
 			logger.debug('Successfully enrolled username %s  and setUserContext on the client object', username);
 		}
 		if(user && user.isEnrolled) {
+			logger.debug('Successfully enrolled');
 			if (isJson && isJson === true) {
 				var response = {
 					success: true,
 					secret: user._enrollmentSecret,
 					message: username + ' enrolled Successfully',
 				};
+
+				logger.debug('Responce %s',JSON.stringify(response));
 				return response;
 			}
 		} else {

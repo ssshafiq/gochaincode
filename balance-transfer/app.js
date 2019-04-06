@@ -36,6 +36,7 @@ var createChannel = require('./app/create-channel.js');
 var join = require('./app/join-channel.js');
 var updateAnchorPeers = require('./app/update-anchor-peers.js');
 var install = require('./app/install-chaincode.js');
+var upgrade = require('./app/upgrade-chaincode.js');
 var instantiate = require('./app/instantiate-chaincode.js');
 var invoke = require('./app/invoke-transaction.js');
 var query = require('./app/query.js');
@@ -110,13 +111,13 @@ function getErrorMessage(field) {
 app.post('/users', async function(req, res) {
 	var username = req.body.username;
 	var orgName = req.body.orgName;
-	var role = req.body.role;
+	var userrole = req.body.userrole;
 	var mspRole = req.body.mspRole;
 	var id = req.body.id;
 	logger.debug('End point : /users');
 	logger.debug('User name : ' + username);
 	logger.debug('Org name  : ' + orgName);
-	logger.debug('role  : ' + role);
+	logger.debug('userrole  : ' + userrole);
 	logger.debug('id  : ' + id);
 	if (!username) {
 		res.json(getErrorMessage('\'username\''));
@@ -126,8 +127,8 @@ app.post('/users', async function(req, res) {
 		res.json(getErrorMessage('\'orgName\''));
 		return;
 	}
-	if (!role) {
-		res.json(getErrorMessage('\'role\''));
+	if (!userrole) {
+		res.json(getErrorMessage('\'userrole\''));
 		return;
 	}
 	if (!mspRole) {
@@ -144,7 +145,11 @@ app.post('/users', async function(req, res) {
 		orgName: orgName
 	}, app.get('secret'));
 
-	let response = await helper.getRegisteredUser(username, orgName, true,mspRole,role,id);
+	logger.debug('Tokken', token);
+	let response = await helper.getRegisteredUser(username, orgName, true,mspRole,userrole,id);
+
+	logger.debug('returned form helper functions %s',response);
+
 	logger.debug('-- returned from registering the username %s for organization %s',username,orgName);
 	if (response && typeof response !== 'string') {
 		logger.debug('Successfully registered the username %s for organization %s',username,orgName);
@@ -252,6 +257,41 @@ app.post('/chaincodes', async function(req, res) {
 	}
 	let message = await install.installChaincode(peers, chaincodeName, chaincodePath, chaincodeVersion, chaincodeType, req.username, req.orgname)
 	res.send(message);});
+// Upgrade chaincode version on target peers
+app.post('/upgrade', async function(req, res) {
+	logger.debug('==================== UPGRADE CHAINCODE ==================');
+	var peers = req.body.peers;
+	var chaincodeName = req.body.chaincodeName;
+	var chaincodePath = req.body.chaincodePath;
+	var chaincodeVersion = req.body.chaincodeVersion;
+	var chaincodeType = req.body.chaincodeType;
+	logger.debug('peers : ' + peers); // target peers list
+	logger.debug('chaincodeName : ' + chaincodeName);
+	logger.debug('chaincodePath  : ' + chaincodePath);
+	logger.debug('chaincodeVersion  : ' + chaincodeVersion);
+	logger.debug('chaincodeType  : ' + chaincodeType);
+	if (!peers || peers.length == 0) {
+		res.json(getErrorMessage('\'peers\''));
+		return;
+	}
+	if (!chaincodeName) {
+		res.json(getErrorMessage('\'chaincodeName\''));
+		return;
+	}
+	if (!chaincodePath) {
+		res.json(getErrorMessage('\'chaincodePath\''));
+		return;
+	}
+	if (!chaincodeVersion) {
+		res.json(getErrorMessage('\'chaincodeVersion\''));
+		return;
+	}
+	if (!chaincodeType) {
+		res.json(getErrorMessage('\'chaincodeType\''));
+		return;
+	}
+	let message = await upgrade.upgradeChaincode(peers, chaincodeName, chaincodePath, chaincodeVersion, chaincodeType, req.username, req.orgname)
+	res.send(message);});
 // Instantiate chaincode on target peers
 app.post('/channels/:channelName/chaincodes', async function(req, res) {
 	logger.debug('==================== INSTANTIATE CHAINCODE ==================');
@@ -293,6 +333,7 @@ app.post('/channels/:channelName/chaincodes', async function(req, res) {
 	let message = await instantiate.instantiateChaincode(peers, channelName, chaincodeName, chaincodeVersion, chaincodeType, fcn, args, req.username, req.orgname);
 	res.send(message);
 });
+
 // Invoke transaction on chaincode on target peers
 app.post('/channels/:channelName/chaincodes/:chaincodeName', async function(req, res) {
 	logger.debug('==================== INVOKE ON CHAINCODE ==================');

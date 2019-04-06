@@ -1,0 +1,10 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"path": "Model",
+			"revisi
+	],
+	"rootPath": "/home/saad/gochaincode/balance-transfer/artifacts/src/github.com/example_cc/go/go_projects/src"
+}

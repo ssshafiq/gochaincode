@@ -4,13 +4,13 @@
       "identities": [{
           "role": {
             "name": "member",
-            "mspId": "Org1MSP"
+            "mspId": "org-mtbcMSP"
           }
         },
         {
           "role": {
             "name": "member",
-            "mspId": "Org2MSP"
+            "mspId": "org-uniMSP"
           }
         }
       ],
@@ -35,7 +35,7 @@
       "identities": [{
         "role": {
           "name": "member",
-          "mspId": "Org1MSP"
+          "mspId": "org-mtbcMSP"
         }
       }
     ],
@@ -55,13 +55,13 @@
       "identities": [{
           "role": {
             "name": "member",
-            "mspId": "Org1MSP"
+            "mspId": "org-mtbcMSP"
           }
         },
         {
           "role": {
             "name": "member",
-            "mspId": "Org2MSP"
+            "mspId": "org-uniMSP"
           }
         }
       ],

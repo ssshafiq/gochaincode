@@ -242,8 +242,8 @@ export async function getRegisteredUsers(
 
     const caClient = caClients[userOrg];
     const secret = await caClient.register({
-        enrollmentID: username,
-        affiliation: userOrg + '.department1'
+        enrollmentID: username//,
+      //  affiliation: userOrg 
     }, adminUser);
 
     logger.debug(username + ' registered successfully');
